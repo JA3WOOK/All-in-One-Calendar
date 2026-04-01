@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const userModel = require("../models/userModel");
+const { Profiler } = require("react");
 
 exports.login = async (login_id, password) => {
    // 유저 조회
@@ -23,6 +24,10 @@ exports.login = async (login_id, password) => {
       user_id: user.user_id,
       login_id: user.login_id,
       name: user.name,
+      email: user.email,
+      phone: user.phone,
+      department: user.department,
+      Profile_image: user.Profile_image,
    },
    };
 };
