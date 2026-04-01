@@ -1,4 +1,4 @@
-const pool = require("..config/db");
+const pool = require("../config/db");
 
 // login_id로 사용자 조회 
 exports.getUserByLoginId = async (login_id) => {
