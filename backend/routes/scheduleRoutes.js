@@ -1,0 +1,1 @@
+// /api/schedules 경로 정의

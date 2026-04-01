@@ -1,16 +1,16 @@
-//  MySQL 연결 설정
+// MySQL 연결 설정
+require('dotenv').config(); // 1. .env 파일을 읽어서 process.env에 담습니다.
+const mysql = require("mysql2/promise");
 
-const mysql = require("mysql2/promise");  // Promise + async/await 사용  
- 
 // 커넥션 풀 생성 
 const pool = mysql.createPool({ 
-  host: "localhost",     // DB 서버 
-  user: "root",          // 계정 
-  password: "1234",      // 비밀번호 
-  database: "",     // DB명 
-  waitForConnections: true, // 기다릴 지 유무  
-  connectionLimit: 10, //동시 연결 수   
-  queueLimit: 0   // queue에 쌓을 수 있는 요청 개수 제한,  0은 무한대기  
+  host: process.env.DB_HOST || "localhost",     // 변수 처리 (기본값 localhost)
+  user: process.env.DB_USER || "root",          // 변수 처리 (기본값 root)
+  password: process.env.DB_PASSWORD,             // ⭐️ 핵심: 리더님의 비번 대신 변수 사용!
+  database: process.env.DB_NAME,                 // ⭐️ 핵심: DB명도 변수로 처리
+  waitForConnections: true, 
+  connectionLimit: 10, 
+  queueLimit: 0 
 }); 
- 
-module.exports = pool; 
+
+module.exports = pool;
