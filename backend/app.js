@@ -23,7 +23,7 @@ app.use(express.json());
 // DB 연결 테스트 
 async function testDB() { 
     try { 
-        // await DB의 response를 즉 응답이 올때 까지 잠시 '기다림'
+        
         const [rows] = await pool.query("SELECT 1"); 
         console.log("DB 연결 성공!"); 
 
@@ -49,7 +49,9 @@ app.use((req, res) => {
 // 전역 에러 처리 
 app.use((err, req, res, next) => {
     console.error(err);
-    res.status(500).json({ error: "서버 내부 오류가 발생했습니다."});
+    res.status(err.status || 500).json({
+        message: err.message || "서버 내부 오류가 발생했습니다.",
+    });
 });
 
 
