@@ -1,19 +1,26 @@
 // app.js 에 연결 확인 코드 추가 
 const express = require("express"); 
 const cors = require("cors"); 
-const pool = require("./config/db"); 
+const dotenv = require("dotenv");
 
-const empRoutes = require("./routes/empRoutes");
+dotenv.config();
+
+const pool = require("./config/db"); 
+const authRoutes = require("./routes/authRoutes");
+
 
 const app = express(); 
 
-app.use(cors()); 
+app.use(cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+})
+); 
+
 app.use(express.json()); 
 
-// Promise 객체 : js에서 비동기작업 (완료되지 않고 걸리는 시간) 중에 [실행대기, 성공, 실패]를 리턴하는 객체
-// ex) 카페 진동벨 -> 비동기 대기
-// 컴포넌트 앞에 async를 선언하면 {} 안에 기다려라 await는 코드가 존재한다를 알려주는 것
 
+// DB 연결 테스트 
 async function testDB() { 
     try { 
         // await DB의 response를 즉 응답이 올때 까지 잠시 '기다림'
@@ -24,15 +31,41 @@ async function testDB() {
         console.error("DB 연결 실패:", err); 
     } 
 } 
-testDB(); 
 
+
+// 기본 확인용
 app.get("/", (req, res) => { 
-    res.send("Promise 서버 실행 중 (Promise 버전)" ); 
+    res.send("로그인 서버 실행 중" ); 
 }); 
 
-app.use("/api", empRoutes);
+// 로그인 라우터
+app.use("/api/auth", authRoutes);
 
-const PORT = 3001; 
-app.listen(PORT, () => { 
-console.log(`서버 실행: http://localhost:${PORT}`); 
-}); 
+// 등록되지 않은 경로 처리 
+app.use((req, res) => {
+    res.status(404).json({error : "요청한 경로를 찾을 수 없습니다."});
+});
+
+// 전역 에러 처리 
+app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).json({ error: "서버 내부 오류가 발생했습니다."});
+});
+
+
+const PORT = process.env.PORT || 3001; 
+
+async function startServer() {
+    try {
+        await pool.query("SELECT 1");
+        console.log(`DB 연결 성공`);
+
+        app.listen(PORT, () => { 
+        console.log(`서버 실행: http://localhost:${PORT}`); 
+        }); 
+    } catch (err) {
+        console.error("DB 연결 실패:", err.message);
+        process.exit(1);
+    }
+}
+startServer();
