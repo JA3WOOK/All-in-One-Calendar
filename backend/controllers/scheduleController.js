@@ -13,4 +13,15 @@ const getSchedules = async (req, res) => {
     }
 };
 
-module.exports = { getSchedules };
+const createSchedule = async (req, res) => {
+    try {
+        const result = await scheduleModel.createSchedule(req.body);
+        res.status(201).json({ message: "일정 등록 성공", id: result.insertId });
+    } catch (err) {
+        res.status(500).json({ error: "일정 등록 실패" });
+    }
+};
+
+module.exports = { getSchedules, createSchedule };
+
+
