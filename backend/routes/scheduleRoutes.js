@@ -7,5 +7,7 @@ const scheduleController = require('../controllers/scheduleController');
 // GET /api/schedules 경로로 들어오면 컨트롤러 실행!
 router.get('/', scheduleController.getSchedules);
 router.post('/', scheduleController.createSchedule);
+router.put("/:id", scheduleController.editSchedule);
+router.delete("/:id", scheduleController.removeSchedule);
 
 module.exports = router;

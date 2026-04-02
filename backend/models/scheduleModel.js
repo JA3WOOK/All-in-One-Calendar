@@ -55,8 +55,54 @@ const createSchedule = async (scheduleData) => {
   }
 };
 
+// 일정 수정 SQL 실행 함수
+const updateSchedule = async (id, data) => {
+  const { title, description, start_at, end_at, priority, category, updated_by } = data;
+  
+  const sql = `
+    UPDATE Schedules 
+    SET 
+      title = ?, 
+      description = ?, 
+      start_at = ?, 
+      end_at = ?, 
+      priority = ?, 
+      category = ?,
+      updated_by = ?,   -- 명세서에 있는 수정자 ID 반영
+      updated_at = NOW() -- 수정 일시 갱신
+    WHERE sched_id = ? AND is_deleted = False
+  `;
+  
+  // soft delete된 항목은 수정되지 않도록 조건을 추가하면 더 안전합니다.
+  const values = [title, description, start_at, end_at, priority, category, updated_by, id];
+  
+  const [result] = await pool.query(sql, values);
+  return result;
+};
+
+// 일정 삭제 (Soft Delete)
+const deleteSchedule = async (id, updated_by) => {
+  try {
+    const sql = `
+      UPDATE schedules 
+      SET 
+        is_deleted = 1, 
+        updated_by = ?, 
+        updated_at = NOW() 
+      WHERE sched_id = ?
+    `;
+    const [result] = await pool.query(sql, [updated_by, id]);
+    return result;
+  } catch (err) {
+    console.error("삭제 모델 에러:", err);
+    throw err;
+  }
+};
+
 // 작성한 함수들을 모두 내보내기
 module.exports = { 
     getAllSchedules, 
-    createSchedule 
+    createSchedule,
+    updateSchedule,
+    deleteSchedule
 };
