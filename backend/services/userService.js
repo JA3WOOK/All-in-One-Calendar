@@ -1,5 +1,6 @@
 // services/userService.js
 const db = require("../config/db");
+const bcrypt = require("bcrypt");
 
 const getUserById = async (userId) => {
   const sql = `
@@ -49,15 +50,16 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 
   const user = rows[0];
 
-  // 현재 비밀번호 체크 (지금은 그냥 문자열 비교)
-  if (user.password !== currentPassword) {
-    return null;
-  }
+  // 현재 비밀번호 체크 
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return null;
 
   // 새 비밀번호로 변경
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
   await db.query(
     "UPDATE users SET password = ? WHERE user_id = ?",
-    [newPassword, userId]
+    [hashedPassword, userId]
   );
 
   return true;
@@ -84,9 +86,11 @@ const findUserByEmail = async (email) => {
 };
 
 const resetPasswordByEmail = async (email, newPassword) => {
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
   const [result] = await db.query(
     "UPDATE users SET password = ? WHERE email = ?",
-    [newPassword, email]
+    [hashedPassword, email]
   );
 
   if (result.affectedRows === 0) return null;
