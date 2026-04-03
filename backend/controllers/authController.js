@@ -20,8 +20,12 @@ exports.login = async(req, res, next) => {
       }
 };
 
+// 회원가입
 exports.signup = async (req, res, next) => {
+
    try {
+      const body = req.body || {};
+
       const name = req.body.name ? String(req.body.name).trim() : "";
       const email = req.body.email ? String(req.body.email).trim() : "";
       const password = req.body.password ? String(req.body.password).trim() : "";

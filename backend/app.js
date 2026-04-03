@@ -1,13 +1,13 @@
-const express = require("express"); 
-const cors = require("cors"); 
-const dotenv = require("dotenv");
+require("dotenv").config();
 
-dotenv.config();
+const express = require("express");
+const cors = require("cors");
+const pool = require("./config/db");
 
-const pool = require("./config/db"); 
+const app = express();
+
 const authRoutes = require("./routes/authRoutes");
-
-const app = express(); 
+const userRoutes = require("./routes/userRoutes");
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -17,19 +17,19 @@ app.use(cors({
 app.use(express.json());
 
 // 기본 확인용
-app.get("/", (req, res) => { 
-  res.send("로그인 서버 실행 중"); 
-}); 
+app.get("/", (req, res) => {
+  res.send("로그인 서버 실행 중");
+});
 
-// 로그인 라우터
 app.use("/api/auth", authRoutes);
+app.use("/users", userRoutes);
 
-// 등록되지 않은 경로 처리 
+// 등록되지 않은 경로 처리
 app.use((req, res) => {
   res.status(404).json({ error: "요청한 경로를 찾을 수 없습니다." });
 });
 
-// 전역 에러 처리 
+// 전역 에러 처리
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({
@@ -37,16 +37,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3001; 
+const PORT = process.env.PORT || 3001;
 
 async function startServer() {
   try {
-    await pool.query("SELECT 1"); // DB 연결 체크
+    await pool.query("SELECT 1");
     console.log("DB 연결 성공");
 
-    app.listen(PORT, () => { 
-      console.log(`서버 실행: http://localhost:${PORT}`); 
-    }); 
+    app.listen(PORT, () => {
+      console.log(`서버 실행: http://localhost:${PORT}`);
+    });
   } catch (err) {
     console.error("DB 연결 실패:", err.message);
     process.exit(1);
@@ -54,4 +54,3 @@ async function startServer() {
 }
 
 startServer();
-

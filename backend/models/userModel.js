@@ -3,7 +3,7 @@ const pool = require("../config/db");
 
 exports.getUserByEmail = async (email) => {
    const sql = `
-      SELECT user_id, password, name, email, phone, department, profile_image
+      SELECT user_id, password, name, email, phone, department, profile_image, is_deleted
       FROM users
       WHERE email = ?
    `;
@@ -15,8 +15,8 @@ exports.getUserByEmail = async (email) => {
 exports.createUser = async (name, email, password) => {
    const sql = `
    INSERT INTO users (name, email, password)
-   VALUES(?, ?, ?, ?)`;
+   VALUES(?, ?, ?)`;
 
    const [result] = await pool.query(sql, [name, email, password]);
    return result;
-}
+};
