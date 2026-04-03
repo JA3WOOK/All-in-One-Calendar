@@ -40,7 +40,7 @@ const updateUserProfile = async (userId, data) => {
   return await getUserById(userId);
 };
 
-// 비밀번호 변경 (현재 비번 입력)
+// 비밀번호 변경
 const changePassword = async (userId, currentPassword, newPassword) => {
   const [rows] = await db.query(
     "SELECT password FROM users WHERE user_id = ?",
@@ -51,11 +51,9 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 
   const user = rows[0];
 
-  // 현재 비밀번호 체크
   const isMatch = await bcrypt.compare(currentPassword, user.password);
   if (!isMatch) return null;
 
-  // 새 비밀번호로 변경
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   await db.query(
@@ -78,7 +76,7 @@ const deleteUserById = async (userId) => {
   return true;
 };
 
-// 이메일로 사용자 찾기 (비번 재설정용)
+// 이메일로 사용자 찾기
 const findUserByEmail = async (email) => {
   const [rows] = await db.query(
     "SELECT user_id, email, name FROM users WHERE email = ?",
@@ -88,7 +86,7 @@ const findUserByEmail = async (email) => {
   return rows.length ? rows[0] : null;
 };
 
-// 이메일 기반 비밀번호 재설정
+// 이메일 기준 비밀번호 재설정
 const resetPasswordByEmail = async (email, newPassword) => {
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 

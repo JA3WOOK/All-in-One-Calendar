@@ -4,12 +4,10 @@ const authController = require("../controllers/authController");
 
 router.post("/login", authController.login);
 router.post("/signup", authController.signup);
+router.post("/refresh", authController.refresh);
+router.post("/logout", authController.logout);
 
-router.post("/logout", (req, res) => {
-  return res.status(200).json({
-    success: true,
-    message: "로그아웃 성공",
-  });
-});
+router.post("/forgot-password", authController.requestPasswordReset);
+router.patch("/reset-password", authController.resetPasswordWithToken);
 
 module.exports = router;

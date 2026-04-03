@@ -1,20 +1,31 @@
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 const userModel = require("../models/userModel");
-
 
 const {
   createAccessToken,
   createRefreshToken,
   verifyRefreshToken,
+  createResetToken,
+  verifyResetToken,
 } = require("../utils/jwtUtil");
 
 const refreshTokenModel = require("../models/refreshTokenModel");
+const userService = require("./userService");
+
+// 메일 전송기
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+});
 
 // 로그인
 exports.login = async (email, password, ip) => {
   const rows = await userModel.getUserByEmail(email);
 
-  // 조회 결과 확인 로그 
   console.log("login email:", email);
   console.log("login rows:", rows);
 
@@ -26,9 +37,7 @@ exports.login = async (email, password, ip) => {
 
   const user = rows[0];
 
-  // 조회된 사용자 확인
   console.log("login user:", user);
-
 
   if (user.is_deleted) {
     const error = new Error("아이디 또는 비밀번호가 올바르지 않습니다.");
@@ -38,7 +47,6 @@ exports.login = async (email, password, ip) => {
 
   const isMatch = await bcrypt.compare(password, user.password);
 
-   //비밀번호 비교 결과 확인
   console.log("password match:", isMatch);
 
   if (!isMatch) {
@@ -52,18 +60,15 @@ exports.login = async (email, password, ip) => {
     email: user.email,
   });
 
-   // refresh token 생성
   const refreshToken = createRefreshToken({
     user_id: user.user_id,
     email: user.email,
   });
 
-  // refresh token 만료 시간 (7일)
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 7);
 
-  // DB에 refresh token 저장 
-    await refreshTokenModel.create(
+  await refreshTokenModel.create(
     user.user_id,
     refreshToken,
     expiryDate,
@@ -88,7 +93,7 @@ exports.login = async (email, password, ip) => {
 // 회원가입
 exports.signup = async (name, email, password) => {
   const existingUser = await userModel.getUserByEmail(email);
- 
+
   if (existingUser && existingUser.length > 0) {
     const error = new Error("이미 사용 중인 이메일입니다.");
     error.status = 409;
@@ -98,14 +103,13 @@ exports.signup = async (name, email, password) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   const result = await userModel.createUser(name, email, hashedPassword);
 
-
-
   return {
     message: "회원가입 성공",
     user_id: result.insertId,
   };
 };
 
+// access token 재발급
 exports.refresh = async (refreshToken) => {
   if (!refreshToken) {
     const error = new Error("인증 정보가 유효하지 않습니다.");
@@ -113,7 +117,6 @@ exports.refresh = async (refreshToken) => {
     throw error;
   }
 
-  // DB 조회
   const tokenData = await refreshTokenModel.findByToken(refreshToken);
 
   if (!tokenData) {
@@ -122,21 +125,18 @@ exports.refresh = async (refreshToken) => {
     throw error;
   }
 
-  // 로그아웃된 토큰 체크
   if (tokenData.revoked_at) {
     const error = new Error("인증 정보가 유효하지 않습니다.");
     error.status = 401;
     throw error;
   }
 
-  // 만료 체크
   if (new Date(tokenData.expiry_date) < new Date()) {
     const error = new Error("인증 정보가 유효하지 않습니다.");
     error.status = 401;
     throw error;
   }
 
-  // JWT 검증
   const decoded = verifyRefreshToken(refreshToken);
 
   if (!decoded) {
@@ -145,7 +145,6 @@ exports.refresh = async (refreshToken) => {
     throw error;
   }
 
-  // 새 access token 발급
   const newAccessToken = createAccessToken({
     user_id: decoded.user_id,
     email: decoded.email,
@@ -157,7 +156,7 @@ exports.refresh = async (refreshToken) => {
   };
 };
 
-// 로그아웃 
+// 로그아웃
 exports.logout = async (refreshToken) => {
   if (!refreshToken) {
     const error = new Error("인증 정보가 유효하지 않습니다");
@@ -173,10 +172,77 @@ exports.logout = async (refreshToken) => {
     throw error;
   }
 
-  // DB에서 무효화 처리
   await refreshTokenModel.revoke(refreshToken);
 
   return {
     message: "로그아웃 완료",
+  };
+};
+
+// 비밀번호 재설정 링크 요청
+exports.requestPasswordReset = async (email) => {
+  const user = await userService.findUserByEmail(email);
+
+  if (!user) {
+    const error = new Error("존재하지 않는 이메일입니다.");
+    error.status = 404;
+    throw error;
+  }
+
+  const resetToken = createResetToken({
+    user_id: user.user_id,
+    email: user.email,
+  });
+
+  const resetLink = `${
+    process.env.FRONTEND_URL || "http://localhost:5173"
+  }/reset-password?token=${resetToken}`;
+
+  await transporter.sendMail({
+    from: process.env.MAIL_USER,
+    to: user.email,
+    subject: "[All-in-One-Calendar] 비밀번호 재설정 링크",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2>비밀번호 재설정</h2>
+        <p>아래 버튼을 눌러 비밀번호를 재설정하세요.</p>
+        <a href="${resetLink}"
+           style="display:inline-block;padding:10px 16px;background:#4f46e5;color:white;text-decoration:none;border-radius:8px;">
+           비밀번호 재설정
+        </a>
+        <p style="margin-top:16px;">링크는 15분 동안만 유효합니다.</p>
+      </div>
+    `,
+  });
+
+  return {
+    message: "비밀번호 재설정 링크 전송 성공",
+    resetLink,
+  };
+};
+
+// 토큰으로 비밀번호 재설정
+exports.resetPasswordWithToken = async (token, newPassword) => {
+  const decoded = verifyResetToken(token);
+
+  if (!decoded) {
+    const error = new Error("유효하지 않거나 만료된 토큰입니다.");
+    error.status = 400;
+    throw error;
+  }
+
+  const result = await userService.resetPasswordByEmail(
+    decoded.email,
+    newPassword
+  );
+
+  if (!result) {
+    const error = new Error("비밀번호 재설정 실패");
+    error.status = 400;
+    throw error;
+  }
+
+  return {
+    message: "비밀번호 재설정 성공",
   };
 };
