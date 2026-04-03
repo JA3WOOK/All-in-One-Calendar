@@ -12,7 +12,7 @@ exports.getUserByEmail = async (email) => {
    return rows;
 };
 
-exports.createUser = async (login_id, name, email, password) => {
+exports.createUser = async (name, email, password) => {
    const sql = `
    INSERT INTO users (name, email, password)
    VALUES(?, ?, ?, ?)`;
