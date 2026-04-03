@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const bcrypt = require("bcrypt");
 
+// 사용자 조회
 const getUserById = async (userId) => {
   const sql = `
     SELECT user_id, name, email, phone, department, profile_image, created_at, updated_at
@@ -12,6 +13,7 @@ const getUserById = async (userId) => {
   return rows.length ? rows[0] : null;
 };
 
+// 프로필 수정
 const updateUserProfile = async (userId, data) => {
   const { name, phone, department, profile_image } = data;
 
@@ -38,6 +40,7 @@ const updateUserProfile = async (userId, data) => {
   return await getUserById(userId);
 };
 
+// 비밀번호 변경 (현재 비번 입력)
 const changePassword = async (userId, currentPassword, newPassword) => {
   const [rows] = await db.query(
     "SELECT password FROM users WHERE user_id = ?",
@@ -48,11 +51,11 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 
   const user = rows[0];
 
+  // 현재 비밀번호 체크
   const isMatch = await bcrypt.compare(currentPassword, user.password);
-  if (!isMatch) {
-    return null;
-  }
+  if (!isMatch) return null;
 
+  // 새 비밀번호로 변경
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   await db.query(
@@ -63,6 +66,7 @@ const changePassword = async (userId, currentPassword, newPassword) => {
   return true;
 };
 
+// 계정 삭제
 const deleteUserById = async (userId) => {
   const [result] = await db.query(
     "DELETE FROM users WHERE user_id = ?",
@@ -74,6 +78,7 @@ const deleteUserById = async (userId) => {
   return true;
 };
 
+// 이메일로 사용자 찾기 (비번 재설정용)
 const findUserByEmail = async (email) => {
   const [rows] = await db.query(
     "SELECT user_id, email, name FROM users WHERE email = ?",
@@ -83,6 +88,7 @@ const findUserByEmail = async (email) => {
   return rows.length ? rows[0] : null;
 };
 
+// 이메일 기반 비밀번호 재설정
 const resetPasswordByEmail = async (email, newPassword) => {
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
