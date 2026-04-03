@@ -5,6 +5,7 @@ const userModel = require("../models/userModel");
 const {
   createAccessToken,
   createRefreshToken,
+  verifyRefreshToken,
 } = require("../utils/jwtUtil");
 
 const refreshTokenModel = require("../models/refreshTokenModel");
@@ -105,4 +106,77 @@ exports.signup = async (name, email, password) => {
   };
 };
 
+exports.refresh = async (refreshToken) => {
+  if (!refreshToken) {
+    const error = new Error("인증 정보가 유효하지 않습니다.");
+    error.status = 401;
+    throw error;
+  }
 
+  // DB 조회
+  const tokenData = await refreshTokenModel.findByToken(refreshToken);
+
+  if (!tokenData) {
+    const error = new Error("인증 정보가 유효하지 않습니다.");
+    error.status = 401;
+    throw error;
+  }
+
+  // 로그아웃된 토큰 체크
+  if (tokenData.revoked_at) {
+    const error = new Error("인증 정보가 유효하지 않습니다.");
+    error.status = 401;
+    throw error;
+  }
+
+  // 만료 체크
+  if (new Date(tokenData.expiry_date) < new Date()) {
+    const error = new Error("인증 정보가 유효하지 않습니다.");
+    error.status = 401;
+    throw error;
+  }
+
+  // JWT 검증
+  const decoded = verifyRefreshToken(refreshToken);
+
+  if (!decoded) {
+    const error = new Error("인증 정보가 유효하지 않습니다.");
+    error.status = 401;
+    throw error;
+  }
+
+  // 새 access token 발급
+  const newAccessToken = createAccessToken({
+    user_id: decoded.user_id,
+    email: decoded.email,
+  });
+
+  return {
+    message: "access token 재발급 성공",
+    accessToken: newAccessToken,
+  };
+};
+
+// 로그아웃 
+exports.logout = async (refreshToken) => {
+  if (!refreshToken) {
+    const error = new Error("인증 정보가 유효하지 않습니다");
+    error.status = 401;
+    throw error;
+  }
+
+  const tokenData = await refreshTokenModel.findByToken(refreshToken);
+
+  if (!tokenData) {
+    const error = new Error("인증 정보가 유효하지 않습니다");
+    error.status = 401;
+    throw error;
+  }
+
+  // DB에서 무효화 처리
+  await refreshTokenModel.revoke(refreshToken);
+
+  return {
+    message: "로그아웃 완료",
+  };
+};
