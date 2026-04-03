@@ -5,6 +5,7 @@ require("dotenv").config(); // (비밀번호 보호용)
 
 const pool = require("./config/db"); 
 const scheduleRoutes = require("./routes/scheduleRoutes"); //  일정 라우터 가져오기
+const teamRoutes = require("./routes/teamRoutes"); // 그룹 라우터 가져오기
 
 const app = express();
 // JSON 응답을 2칸 들여쓰기 출력하도록 설정
@@ -15,6 +16,7 @@ app.use(express.json());
 
 //라우터 연결
 app.use("/api/schedules", scheduleRoutes);
+app.use("/api/teams", teamRoutes);
 
 // Promise 객체 : js에서 비동기작업 (완료되지 않고 걸리는 시간) 중에 [실행대기, 성공, 실패]를 리턴하는 객체
 // ex) 카페 진동벨 -> 비동기 대기
