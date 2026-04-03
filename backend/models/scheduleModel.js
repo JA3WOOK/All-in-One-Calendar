@@ -41,7 +41,7 @@ const createSchedule = async (scheduleData) => {
       start_at, 
       end_at, 
       priority || 'MEDIUM', // 기본값 설정
-      category,             // 필수값 (self_dev, work 등)
+      category, 'ETC', // category가 없을 경우를 대비한 기본값
       user_id, 
       team_id || null,
       user_id,              // created_by

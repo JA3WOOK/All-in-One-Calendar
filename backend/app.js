@@ -6,7 +6,9 @@ require("dotenv").config(); // (비밀번호 보호용)
 const pool = require("./config/db"); 
 const scheduleRoutes = require("./routes/scheduleRoutes"); //  일정 라우터 가져오기
 
-const app = express(); 
+const app = express();
+// JSON 응답을 2칸 들여쓰기 출력하도록 설정
+app.set('json spaces', 2);
 
 app.use(cors()); 
 app.use(express.json());
