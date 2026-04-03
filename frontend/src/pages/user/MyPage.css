@@ -1,0 +1,111 @@
+.mypage-page {
+  min-height: 100vh;
+  background: #f5f6fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.mypage-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.mypage-profile-section {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.mypage-profile-image-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.mypage-profile-image,
+.mypage-profile-placeholder {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e9ebf0;
+}
+
+.mypage-profile-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 60px;
+}
+
+.mypage-image-edit-btn {
+  border: none;
+  background: none;
+  color: #666666;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.mypage-user-name {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111111;
+}
+
+.mypage-user-email {
+  margin: 0;
+  font-size: 18px;
+  color: #666666;
+}
+
+.mypage-menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.mypage-menu-btn {
+  width: 100%;
+  height: 52px;
+  border: 1px solid #d9dce3;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #222222;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mypage-action-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mypage-logout-btn {
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 14px;
+  background: #4f80ff;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mypage-delete-btn {
+  border: none;
+  background: none;
+  color: #ff3b30;
+  font-size: 15px;
+  cursor: pointer;
+}

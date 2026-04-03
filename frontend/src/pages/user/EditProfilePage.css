@@ -1,0 +1,121 @@
+.edit-page {
+  min-height: 100vh;
+  background: #f5f6fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.edit-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 36px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.edit-title {
+  margin: 0 0 28px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111111;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.edit-profile-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.edit-profile-image-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.edit-profile-image,
+.edit-profile-placeholder {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e9ebf0;
+}
+
+.edit-profile-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 56px;
+}
+
+.edit-image-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 110px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: #4f80ff;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-input-group label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #222222;
+}
+
+.edit-input-group input {
+  width: 100%;
+  height: 50px;
+  border: 1px solid #d9dce3;
+  border-radius: 12px;
+  padding: 0 14px;
+  background: #ffffff;
+  color: #111111;
+  font-size: 15px;
+  outline: none;
+}
+
+.edit-input-group input::placeholder {
+  color: #999999;
+}
+
+.edit-input-group input:disabled {
+  background: #f2f3f7;
+  color: #888888;
+  cursor: not-allowed;
+}
+
+.edit-save-btn {
+  width: 100%;
+  height: 54px;
+  border: none;
+  border-radius: 14px;
+  background: #4f80ff;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
