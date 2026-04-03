@@ -12,7 +12,7 @@ exports.login = async(req, res, next) => {
             });
          }
 
-         const result = await authService.login(email, password);
+         const result = await authService.login(email, password, req.ip);
 
          res.status(200).json(result);
       } catch (err) {
