@@ -6,12 +6,14 @@ exports.create = async (user_id, token, expiry_date, ip) => {
     INSERT INTO refresh_tokens (user_id, token, expiry_date, login_ip)
     VALUES (?, ?, ?, ?)
   `;
+
   const [result] = await pool.query(sql, [
     user_id,
     token,
     expiry_date,
     ip,
   ]);
+
   return result;
 };
 
@@ -22,8 +24,9 @@ exports.findByToken = async (token) => {
     FROM refresh_tokens
     WHERE token = ?
   `;
+
   const [rows] = await pool.query(sql, [token]);
-  return rows[0];
+  return rows.length ? rows[0] : null;
 };
 
 // 무효화
@@ -31,8 +34,9 @@ exports.revoke = async (token) => {
   const sql = `
     UPDATE refresh_tokens
     SET revoked_at = NOW()
-    WHERE token = ?
+    WHERE token = ? AND revoked_at IS NULL
   `;
+
   const [result] = await pool.query(sql, [token]);
   return result;
 };

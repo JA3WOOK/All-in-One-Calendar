@@ -43,7 +43,7 @@ exports.signup = async (req, res, next) => {
   }
 };
 
-// refresh
+// 로그인 상태 연장
 exports.refresh = async (req, res, next) => {
   try {
     const refreshToken = req.body.refreshToken

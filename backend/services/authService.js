@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const userModel = require("../models/userModel");
+const refreshTokenModel = require("../models/refreshTokenModel");
 
 const {
   createAccessToken,
@@ -10,7 +11,6 @@ const {
   verifyResetToken,
 } = require("../utils/jwtUtil");
 
-const refreshTokenModel = require("../models/refreshTokenModel");
 const userService = require("./userService");
 
 // 메일 전송기
@@ -24,6 +24,12 @@ const transporter = nodemailer.createTransport({
 
 // 로그인
 exports.login = async (email, password, ip) => {
+  if (!email || !password) {
+    const error = new Error("아이디와 비밀번호를 입력하세요.");
+    error.status = 400;
+    throw error;
+  }
+
   const rows = await userModel.getUserByEmail(email);
 
   console.log("login email:", email);
@@ -92,6 +98,12 @@ exports.login = async (email, password, ip) => {
 
 // 회원가입
 exports.signup = async (name, email, password) => {
+  if (!name || !email || !password) {
+    const error = new Error("입력값을 다시 확인해주세요.");
+    error.status = 400;
+    throw error;
+  }
+
   const existingUser = await userModel.getUserByEmail(email);
 
   if (existingUser && existingUser.length > 0) {
@@ -112,7 +124,7 @@ exports.signup = async (name, email, password) => {
 // access token 재발급
 exports.refresh = async (refreshToken) => {
   if (!refreshToken) {
-    const error = new Error("인증 정보가 유효하지 않습니다.");
+    const error = new Error("로그인이 필요합니다.");
     error.status = 401;
     throw error;
   }
@@ -120,7 +132,7 @@ exports.refresh = async (refreshToken) => {
   const tokenData = await refreshTokenModel.findByToken(refreshToken);
 
   if (!tokenData) {
-    const error = new Error("인증 정보가 유효하지 않습니다.");
+    const error = new Error("로그인 정보가 만료되었습니다. 다시 로그인해주세요.");
     error.status = 401;
     throw error;
   }
@@ -151,7 +163,7 @@ exports.refresh = async (refreshToken) => {
   });
 
   return {
-    message: "access token 재발급 성공",
+    message: "로그인 상태가 연장되었습니다.",
     accessToken: newAccessToken,
   };
 };
@@ -159,15 +171,15 @@ exports.refresh = async (refreshToken) => {
 // 로그아웃
 exports.logout = async (refreshToken) => {
   if (!refreshToken) {
-    const error = new Error("인증 정보가 유효하지 않습니다");
+    const error = new Error("로그인이 필요합니다.");
     error.status = 401;
     throw error;
   }
 
-  const tokenData = await refreshTokenModel.findByToken(refreshToken);
+  const savedData = await refreshTokenModel.findByToken(refreshToken);
 
-  if (!tokenData) {
-    const error = new Error("인증 정보가 유효하지 않습니다");
+  if (!savedData) {
+    const error = new Error("이미 로그아웃 되었거나 유효하지 않은 요청입니다.");
     error.status = 401;
     throw error;
   }
@@ -175,7 +187,7 @@ exports.logout = async (refreshToken) => {
   await refreshTokenModel.revoke(refreshToken);
 
   return {
-    message: "로그아웃 완료",
+    message: "로그아웃 되었습니다.",
   };
 };
 
