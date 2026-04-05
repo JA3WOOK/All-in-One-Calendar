@@ -1,38 +1,60 @@
-// app.js 에 연결 확인 코드 추가 
-const express = require("express"); 
-const cors = require("cors"); 
-const pool = require("./config/db"); 
+// ── 모듈 import ───────────────────────────────────
+const express = require("express");
+const cors = require("cors");
+const cron = require("node-cron");
+const pool = require("./config/db");
+const todoModel = require("./models/todoModel");
 
-const empRoutes = require("./routes/empRoutes");
+// ── 라우터 import ─────────────────────────────────
+const todoRoutes = require("./routes/todoRoutes");
 
-const app = express(); 
+// ── Express 앱 생성 ───────────────────────────────
+const app = express();
 
-app.use(cors()); 
-app.use(express.json()); 
+// ── 미들웨어 등록 ─────────────────────────────────
+app.use(cors());          // 프론트엔드 CORS 허용
+app.use(express.json());  // req.body JSON 파싱
 
-// Promise 객체 : js에서 비동기작업 (완료되지 않고 걸리는 시간) 중에 [실행대기, 성공, 실패]를 리턴하는 객체
-// ex) 카페 진동벨 -> 비동기 대기
-// 컴포넌트 앞에 async를 선언하면 {} 안에 기다려라 await는 코드가 존재한다를 알려주는 것
+// ── 라우터 연결 ───────────────────────────────────
+app.get("/", (req, res) => {
+    res.send("서버 실행 중");
+});
 
-async function testDB() { 
-    try { 
-        // await DB의 response를 즉 응답이 올때 까지 잠시 '기다림'
-        const [rows] = await pool.query("SELECT 1"); 
-        console.log("DB 연결 성공!"); 
+app.use("/todos", todoRoutes);
 
-    } catch (err) { 
-        console.error("DB 연결 실패:", err); 
-    } 
-} 
-testDB(); 
+// ── 서버 시작 ─────────────────────────────────────
+const PORT = 3001;
+app.listen(PORT, () => {
+    console.log(`서버 실행: http://localhost:${PORT}`);
+});
 
-app.get("/", (req, res) => { 
-    res.send("Promise 서버 실행 중 (Promise 버전)" ); 
-}); 
+// ── 자동 미루기 ───────────────────────────────────
 
-app.use("/api", empRoutes);
+// 서버 시작 시 밀린 todo 즉시 처리
+// 서버가 꺼져있는 동안 자정을 넘긴 todo를 서버 켤 때 한 번에 처리
+async function runMissedCarryOver() {
+    try {
+        const count = await todoModel.carryOverTodos();
+        if (count > 0) {
+            console.log(`[자동 미루기] 서버 시작 시 ${count}개 처리됨`);
+        }
+    } catch (err) {
+        console.error("[자동 미루기 오류]", err);
+    }
+}
 
-const PORT = 3001; 
-app.listen(PORT, () => { 
-console.log(`서버 실행: http://localhost:${PORT}`); 
-}); 
+runMissedCarryOver();
+
+// 매일 자정 0시 0분에 자동 미루기 실행
+// - is_carried_over = TRUE, is_done = FALSE, due_date < 오늘 인 todo를 +1일
+// - 서버가 켜져있는 동안만 동작 (꺼지면 runMissedCarryOver가 대신 처리)
+cron.schedule("0 0 * * *", async () => {
+    try {
+        const count = await todoModel.carryOverTodos();
+        console.log(`[자동 미루기] ${count}개 todo가 +1일 처리됨`);
+    } catch (err) {
+        console.error("[자동 미루기 오류]", err);
+    }
+}, {
+    timezone: "Asia/Seoul", // 한국 시간 기준
+});
