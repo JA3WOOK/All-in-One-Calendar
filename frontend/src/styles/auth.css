@@ -94,11 +94,6 @@ body {
   border: 2px solid transparent;
 }
 
-.profile-image-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 .profile-upload-btn {
   min-width: 180px;
@@ -319,32 +314,7 @@ body {
 }
 
 /*프로필*/
-.profile-preview-img,
-.profile-thumb-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
 
-.profile-upload-btn {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 10px 16px;
-  background: #5b7cff;
-  color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  text-align: center;
-}
-
-.upload-error-text {
-  margin-top: 8px;
-  font-size: 13px;
-  color: #ff4d4f;
-  text-align: center;
-}
 
 .profile-preview-img,
 .profile-thumb-img {
@@ -400,6 +370,112 @@ body {
   cursor: pointer;
   padding: 0;
 }
+
+/*크롭*/
+.crop-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.crop-modal-box {
+  width: 550px;          /* ⬅️ 더 크게 */
+  max-width: calc(100vw - 32px);
+  background: #f8f9fc;   /* ⬅️ 살짝 회색 */
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.crop-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f1f3f8;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 32px;
+  cursor: pointer;
+}
+
+.crop-modal-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 18px;
+}
+
+.crop-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.crop-area {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #e9ebef;
+}
+
+.crop-zoom-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crop-zoom-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+}
+
+.crop-zoom-range {
+  width: 50%;       
+  margin: 0 auto;   
+  display: block;
+}
+
+.crop-modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.crop-btn {
+  min-width: 120px;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/*취소 버튼*/
+.crop-btn-cancel { 
+  border: 1px solid #d6dbe8;
+  background: #f5f5f5;
+  color: #444;
+}
+
+/*확인 버튼*/
+.crop-btn-confirm { 
+  border: none;
+  background: #5d87f7;
+  color: #fff;
+}
+
 /* =========================
    반응형
 ========================= */

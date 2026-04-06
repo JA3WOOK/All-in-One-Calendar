@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signupApi } from "../api/authApi";
+import ProfileImageCropModal from "./ProfileImageCropModal";
 import "../styles/auth.css";
 
 export default function SignupPage() {
@@ -20,6 +21,10 @@ export default function SignupPage() {
   const [selectedProfile, setSelectedProfile] = useState("👤");
   const [uploadedProfiles, setUploadedProfiles] = useState([]);
 
+  // 🔥 추가된 state
+  const [imageSrc, setImageSrc] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+
   const profiles = ["👤", "🧑", "👨", "👩", "🙂", null];
 
   const handleChange = (e) => {
@@ -31,6 +36,7 @@ export default function SignupPage() {
     }));
   };
 
+  // 🔥 수정된 업로드 함수 (모달 연결)
   const handleProfileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -45,19 +51,31 @@ export default function SignupPage() {
       return;
     }
 
-    const newImage = {
-      file,
-      preview: URL.createObjectURL(file),
-    };
+    const preview = URL.createObjectURL(file);
 
-    setUploadedProfiles((prev) => [...prev, newImage]);
-    setSelectedProfile(newImage.preview);
-    setUploadError("");
+    // 👉 기존: 바로 저장 ❌
+    // 👉 변경: 크롭 모달로 보냄 ⭕
+    setImageSrc(preview);
+    setShowCropModal(true);
 
-    // 같은 파일 다시 선택 가능하게 초기화
     e.target.value = "";
   };
 
+  // 🔥 크롭 완료 후 실행
+  const handleCropComplete = (croppedImage) => {
+    const newImage = {
+      file: null,
+      preview: croppedImage,
+    };
+
+    setUploadedProfiles((prev) => [...prev, newImage]);
+    setSelectedProfile(croppedImage);
+
+    setShowCropModal(false);
+    setImageSrc(null);
+  };
+
+  // 🔥 삭제 함수
   const handleRemoveUploadedProfile = (previewToRemove) => {
     setUploadedProfiles((prev) => {
       const updated = prev.filter((item) => item.preview !== previewToRemove);
@@ -110,7 +128,7 @@ export default function SignupPage() {
         (item) => item.preview === selectedProfile
       );
 
-      if (selectedUploadedImage) {
+      if (selectedUploadedImage && selectedUploadedImage.file) {
         formData.append("profileImage", selectedUploadedImage.file);
       } else {
         formData.append("profileEmoji", selectedProfile);
@@ -249,7 +267,9 @@ export default function SignupPage() {
                     className="profile-remove-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRemoveUploadedProfile(uploadedProfiles[1].preview);
+                      handleRemoveUploadedProfile(
+                        uploadedProfiles[1].preview
+                      );
                     }}
                   >
                     ×
@@ -272,52 +292,44 @@ export default function SignupPage() {
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="name">이름</label>
+              <label>이름</label>
               <input
-                id="name"
                 className="form-input"
                 type="text"
                 name="name"
-                placeholder="이름"
                 value={form.name}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">이메일</label>
+              <label>이메일</label>
               <input
-                id="email"
                 className="form-input"
                 type="email"
                 name="email"
-                placeholder="your@email.com"
                 value={form.email}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">비밀번호</label>
+              <label>비밀번호</label>
               <input
-                id="password"
                 className="form-input"
                 type="password"
                 name="password"
-                placeholder="8자 이상 입력하세요"
                 value={form.password}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="passwordConfirm">비밀번호 확인</label>
+              <label>비밀번호 확인</label>
               <input
-                id="passwordConfirm"
                 className="form-input"
                 type="password"
                 name="passwordConfirm"
-                placeholder="비밀번호를 다시 입력하세요"
                 value={form.passwordConfirm}
                 onChange={handleChange}
               />
@@ -327,11 +339,6 @@ export default function SignupPage() {
               계정 만들기
             </button>
 
-            <div className="auth-bottom-text">
-              이미 계정이 있으신가요?{" "}
-              <span onClick={() => navigate("/login")}>로그인 하기</span>
-            </div>
-
             {message && (
               <div className={isError ? "error-text" : "success-text"}>
                 {message}
@@ -340,6 +347,15 @@ export default function SignupPage() {
           </form>
         </div>
       </div>
+
+      {/* 크롭 모달 */}
+      {showCropModal && (
+        <ProfileImageCropModal
+          imageSrc={imageSrc}
+          onClose={() => setShowCropModal(false)}
+          onComplete={handleCropComplete}
+        />
+      )}
     </div>
   );
 }
