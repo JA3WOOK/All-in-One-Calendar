@@ -109,8 +109,11 @@ export default function CreateModal({
                 teamId: scope === "team" ? teamId : null, ...base });
         } else {
             onSubmit?.({ type:"todo", scope, content, dueDate, isCarriedOver, isDone,
-                teamId:   scope === "team" ? teamId   : null,
-                assignBy: scope === "team" ? assignBy : null,
+                teamId:        scope === "team" ? teamId   : null,
+                assignBy:      scope === "team" ? assignBy : null,
+                // 반복 설정이 있으면 항상 재생성, 없으면 단건 수정
+                editScope:     isRepeat ? "rebuild" : "only",
+                repeatGroupId: initialData?.repeatGroupId ?? null,
                 ...base });
         }
         onClose?.();
@@ -194,7 +197,7 @@ export default function CreateModal({
                             )}
                             <Row icon={<RepeatSVG />}>
                                 <ToggleRow label="반복" value={isRepeat} onChange={setIsRepeat} />
-                                {isRepeat && <RepeatOptions {...{ repeatType, setRepeatType, repeatInterval, setRepeatInterval, repeatEndAt, setRepeatEndAt }} />}
+                                {isRepeat && <RepeatOptions {...{ repeatType, setRepeatType, repeatInterval, setRepeatInterval, repeatEndAt, setRepeatEndAt }} minDate={startAt ? startAt.slice(0,10) : undefined} />}
                             </Row>
                             <Row icon={<LocationSVG />}>
                                 <input style={s.inlineInput} placeholder="위치 추가" value={location} onChange={(e) => setLocation(e.target.value)} />
@@ -248,7 +251,7 @@ export default function CreateModal({
                             </Row>
                             <Row icon={<RepeatSVG />}>
                                 <ToggleRow label="반복" value={isRepeat} onChange={setIsRepeat} />
-                                {isRepeat && <RepeatOptions {...{ repeatType, setRepeatType, repeatInterval, setRepeatInterval, repeatEndAt, setRepeatEndAt }} />}
+                                {isRepeat && <RepeatOptions {...{ repeatType, setRepeatType, repeatInterval, setRepeatInterval, repeatEndAt, setRepeatEndAt }} minDate={dueDate || undefined} />}
                             </Row>
                         </>
                     )}
@@ -259,6 +262,19 @@ export default function CreateModal({
                     <Row icon={<PrioritySVG />}>
                         <Chips list={PRIORITIES} labels={PRIORITY_LABELS} active={priority} onChange={setPriority} colorFn={(p) => PRIORITY_COLORS[p]} />
                     </Row>
+
+                    {/* 반복 일정 수정 안내 */}
+                    {isEdit && isRepeat && (
+                        <div style={{ margin:"8px 16px 0", padding:"10px 14px",
+                            background:"#fff8f0", borderRadius:8,
+                            border:"1px solid #f59e0b44",
+                            display:"flex", alignItems:"flex-start", gap:8 }}>
+                            <span style={{ fontSize:14, flexShrink:0, marginTop:1 }}>ℹ️</span>
+                            <p style={{ fontSize:12, color:"#92400e", margin:0, lineHeight:1.6 }}>
+                                반복 일정 수정 시 기존 반복 일정이 모두 삭제된 후 재생성됩니다.
+                            </p>
+                        </div>
+                    )}
 
                     {/* 삭제 범위 선택 — 반복 Todo 수정 모드에서만 */}
                     {isEdit && onDelete && hasRepeatGroup && (
@@ -389,7 +405,7 @@ function ToggleRow({ label, value, onChange }) {
     );
 }
 
-function RepeatOptions({ repeatType, setRepeatType, repeatInterval, setRepeatInterval, repeatEndAt, setRepeatEndAt }) {
+function RepeatOptions({ repeatType, setRepeatType, repeatInterval, setRepeatInterval, repeatEndAt, setRepeatEndAt, minDate }) {
     return (
         <div style={{ marginTop:10, background:SURFACE, borderRadius:8, padding:"12px 14px",
             display:"flex", flexDirection:"column", gap:12, border:`1px solid ${BORDER}` }}>
@@ -405,8 +421,24 @@ function RepeatOptions({ repeatType, setRepeatType, repeatInterval, setRepeatInt
             <div style={{ height:1, background:BORDER }} />
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <span style={{ fontSize:13, color:MUTED, minWidth:28 }}>종료</span>
-                <input type="date" style={{ flex:1, ...s.dateInput }}
-                       value={repeatEndAt} onChange={(e) => setRepeatEndAt(e.target.value)} />
+                <input
+                    type="date"
+                    style={{ flex:1, ...s.dateInput, ...(minDate && repeatEndAt && repeatEndAt < minDate ? { borderColor: '#c94f4f' } : {}) }}
+                    value={repeatEndAt}
+                    min={minDate ?? undefined}
+                    onChange={(e) => {
+                        const v = e.target.value;
+                        // minDate보다 이전 날짜면 minDate로 자동 보정
+                        if (minDate && v && v < minDate) {
+                            setRepeatEndAt(minDate);
+                        } else {
+                            setRepeatEndAt(v);
+                        }
+                    }}
+                />
+                {minDate && repeatEndAt && repeatEndAt < minDate && (
+                    <span style={{ fontSize:11, color:'#c94f4f', marginLeft:4 }}>시작일 이후여야 합니다</span>
+                )}
             </div>
         </div>
     );
