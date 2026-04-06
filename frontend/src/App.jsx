@@ -42,6 +42,12 @@ function App() {
 
     // 사이드바 hover
     const [hoveredTeamId,         setHoveredTeamId]         = useState(null);
+
+    // 그룹관리 모달
+    const [isTeamManageOpen, setIsTeamManageOpen] = useState(false);
+
+    // 통계 섹션 열림 여부
+    const [isStatsOpen, setIsStatsOpen] = useState(false);
     const [isEditModalOpen,   setIsEditModalOpen]   = useState(false);
 
     // ── 선택된 날짜 / 이벤트 ──────────────────────────
@@ -540,6 +546,8 @@ function App() {
 
     const filteredEvents = [...filteredSchedules, ...filteredTodos];
 
+
+
     // ── renderEventContent: 일정 vs Todo 구분 렌더링 ──
     const PRIORITY_LABEL = { HIGH: '높음', MEDIUM: '보통', LOW: '낮음' };
     const PRIORITY_TEXT_COLOR = { HIGH: '#c94f4f', MEDIUM: '#555', LOW: '#5a9e6f' };
@@ -777,6 +785,20 @@ function App() {
                         </div>
                     )}
                 </div>
+
+                {/* 통계 섹션 */}
+                <div className="category-section">
+                    <div className="category-header" onClick={() => setIsStatsOpen(!isStatsOpen)}>
+                        <span>통계</span>
+                        <span className={`arrow ${isStatsOpen ? 'up' : 'down'}`}>▲</span>
+                    </div>
+                    {isStatsOpen && (
+                        <div style={{ padding:'10px 12px', fontSize:13, color:'#6b7280' }}>
+                            준비 중입니다.
+                        </div>
+                    )}
+                </div>
+
             </aside>
 
             <main className="main-content">
@@ -784,50 +806,87 @@ function App() {
                     <h2 className="main-month-title">
                         {mainDate.getFullYear()}년 {mainDate.getMonth() + 1}월
                     </h2>
-                    <div className="button-group">
-                        <button className="btn-outline" onClick={() => setIsGroupModalOpen(true)}>그룹 생성</button>
-                        <button
-                            className="btn-outline"
-                            onClick={() => { setSelectedDate(""); setSelectedEvent(null); setIsCreateModalOpen(true); }}
-                        >
-                            일정 생성
-                        </button>
-                    </div>
+
+                    {/* 마이페이지 아이콘 */}
+                    <button
+                        title="마이페이지"
+                        style={{ width:44, height:44, borderRadius:'50%', background:'#e5e7eb', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#374151', flexShrink:0, transition:'background 0.15s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background='#d1d5db'}
+                        onMouseLeave={(e) => e.currentTarget.style.background='#e5e7eb'}
+                    >
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </button>
                 </header>
 
-                <div className="calendar-wrapper" style={{ position: "relative" }}>
-                    {/* 뷰 전환 버튼 — 달력 바로 위 오른쪽에 절대 배치 */}
-                    <div style={{
-                        position: 'absolute', top: 0, right: 0,
-                        display: 'flex', gap: 2,
-                        background: '#f1f3f4', borderRadius: 8, padding: 3,
-                        zIndex: 5,
-                    }}>
-                        {[
-                            { view: 'timeGridDay',  label: '일간' },
-                            { view: 'timeGridWeek', label: '주간' },
-                            { view: 'dayGridMonth', label: '월간' },
-                        ].map(({ view, label }) => (
-                            <button
-                                key={view}
-                                onClick={() => { calendarRef.current.getApi().changeView(view); setCurrentView(view); }}
-                                style={{
-                                    padding:      '5px 14px',
-                                    borderRadius:  6,
-                                    border:        'none',
-                                    cursor:        'pointer',
-                                    fontSize:      13,
-                                    fontWeight:    currentView === view ? 600 : 400,
-                                    background:    currentView === view ? '#fff' : 'transparent',
-                                    color:         currentView === view ? '#3c4043' : '#5f6368',
-                                    boxShadow:     currentView === view ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
-                                    transition:    'all 0.15s',
-                                }}
-                            >
-                                {label}
-                            </button>
-                        ))}
+                <div className="calendar-wrapper" style={{ position:'relative' }}>
+                    {/* 달력 오른쪽 상단: 그룹생성·관리 + 뷰 전환 */}
+                    <div style={{ position:'absolute', top:0, right:0, zIndex:5, display:'flex', alignItems:'center', gap:6 }}>
+                        {/* 그룹생성 */}
+                        <button
+                            onClick={() => setIsGroupModalOpen(true)}
+                            style={{ padding:'5px 12px', borderRadius:7, border:'1px solid #e5e7eb', background:'#fff', fontSize:12, color:'#374151', cursor:'pointer', fontWeight:500, display:'flex', alignItems:'center', gap:4, boxShadow:'0 1px 2px rgba(0,0,0,0.06)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background='#f9fafb'}
+                            onMouseLeave={(e) => e.currentTarget.style.background='#fff'}
+                        >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            그룹 생성
+                        </button>
+                        {/* 그룹관리 */}
+                        <button
+                            onClick={() => setIsTeamManageOpen(true)}
+                            style={{ padding:'5px 12px', borderRadius:7, border:'1px solid #e5e7eb', background:'#fff', fontSize:12, color:'#374151', cursor:'pointer', fontWeight:500, boxShadow:'0 1px 2px rgba(0,0,0,0.06)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background='#f9fafb'}
+                            onMouseLeave={(e) => e.currentTarget.style.background='#fff'}
+                        >
+                            그룹 관리
+                        </button>
+                        {/* 구분선 */}
+                        <div style={{ width:1, height:20, background:'#e5e7eb' }} />
+                        {/* 일간/주간/월간 */}
+                        <div style={{ display:'flex', gap:2, background:'#f1f3f4', borderRadius:8, padding:3 }}>
+                            {[
+                                { view:'timeGridDay',  label:'일간' },
+                                { view:'timeGridWeek', label:'주간' },
+                                { view:'dayGridMonth', label:'월간' },
+                            ].map(({ view, label }) => (
+                                <button
+                                    key={view}
+                                    onClick={() => { calendarRef.current.getApi().changeView(view); setCurrentView(view); }}
+                                    style={{
+                                        padding:'5px 14px', borderRadius:6, border:'none', cursor:'pointer',
+                                        fontSize:13, fontWeight: currentView === view ? 600 : 400,
+                                        background: currentView === view ? '#fff' : 'transparent',
+                                        color:      currentView === view ? '#3c4043' : '#5f6368',
+                                        boxShadow:  currentView === view ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
+                                        transition: 'all 0.15s',
+                                    }}
+                                >{label}</button>
+                            ))}
+                        </div>
                     </div>
+                    {/* FullCalendar prev/next/today 버튼 스타일 오버라이드 */}
+                    <style>{`
+            .fc-button {
+              background: #fff !important;
+              border: 1px solid #e5e7eb !important;
+              color: #374151 !important;
+              border-radius: 8px !important;
+              box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+              font-size: 13px !important;
+              padding: 6px 12px !important;
+              font-weight: 500 !important;
+              transition: background 0.15s !important;
+            }
+            .fc-button:hover { background: #f9fafb !important; }
+            .fc-button:focus { box-shadow: 0 0 0 2px rgba(95,99,104,0.2) !important; }
+            .fc-button-active, .fc-button:active { background: #f3f4f6 !important; box-shadow: none !important; }
+            .fc-prev-button, .fc-next-button { padding: 6px 10px !important; }
+            .fc-today-button:disabled { opacity: 0.4 !important; }
+            .fc-toolbar-chunk { display: flex !important; align-items: center !important; gap: 4px !important; }
+          `}</style>
                     <FullCalendar
                         ref={calendarRef}
                         plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin]}
@@ -873,6 +932,22 @@ function App() {
                     onSubmit={handleEditSubmit}
                     onDelete={handleDeleteEvent}
                 />
+            )}
+
+            {/* ── 그룹 관리 모달 (내용 추후 연결 예정) ── */}
+            {isTeamManageOpen && (
+                <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}
+                     onClick={(e) => e.target === e.currentTarget && setIsTeamManageOpen(false)}>
+                    <div style={{ background:'#fff', borderRadius:12, width:420, boxShadow:'0 4px 24px rgba(0,0,0,0.14)', padding:'24px 24px 20px' }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+                            <span style={{ fontSize:16, fontWeight:600, color:'#2d2d2d' }}>그룹 관리</span>
+                            <button onClick={() => setIsTeamManageOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'#9ca3af', lineHeight:1 }}>×</button>
+                        </div>
+                        <div style={{ padding:'32px 0', textAlign:'center', color:'#9ca3af', fontSize:13 }}>
+                            준비 중입니다.
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* ── 그룹 생성 모달 ── */}
