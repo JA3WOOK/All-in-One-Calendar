@@ -13,12 +13,12 @@ exports.getUserByEmail = async (email) => {
 };
 
 // 회원가입
-exports.createUser = async (name, email, password) => {
+exports.createUser = async (name, email, password, profileImage) => {
   const sql = `
-    INSERT INTO users (name, email, password)
-    VALUES (?, ?, ?)
+    INSERT INTO users (name, email, password, profile_Image)
+    VALUES (?, ?, ?, ?)
   `;
 
-  const [result] = await pool.query(sql, [name, email, password]);
+  const [result] = await pool.query(sql, [name, email, password, profileImage]);
   return result;
 };
