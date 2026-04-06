@@ -269,7 +269,7 @@ function App() {
                 <div key={team.team_id} className="category-item">
                   <input
                     type="checkbox"
-                    // 💡 핵심: 전체 team이 아니라, 현재 팀의 ID에 해당하는 값만 확인
+                    // 전체 team이 아니라, 현재 팀의 ID에 해당하는 값만 확인
                     checked={filters.teams[team.team_id] || false}
                     onChange={() => {
                       setFilters({
