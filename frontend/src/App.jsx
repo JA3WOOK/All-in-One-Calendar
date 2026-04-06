@@ -290,7 +290,18 @@ function App() {
                 startAt:     info.event.startStr.slice(0, 16),
                 endAt:       info.event.end ? info.event.endStr.slice(0, 16) : info.event.startStr.slice(0, 16),
                 description: ep.description ?? "",
-                location:    ep.location    ?? "",
+                // DB JOIN 결과: location_name, address, latitude, longitude 컬럼으로 옴
+                // 또는 기존 문자열 location 필드로 올 수 있으므로 두 케이스 처리
+                location: ep.location_name || ep.address
+                    ? {
+                        name:    ep.location_name ?? ep.location ?? '',
+                        address: ep.address       ?? ep.location ?? '',
+                        lat:     ep.latitude      ?? null,
+                        lng:     ep.longitude     ?? null,
+                    }
+                    : typeof ep.location === 'object' && ep.location?.address
+                        ? ep.location
+                        : { name: '', address: '', lat: null, lng: null },
                 category:    ep.category    ?? "",
                 priority:    ep.priority    ?? "MEDIUM",
                 isRepeat:    false,
@@ -307,6 +318,12 @@ function App() {
         try {
             if (data.type === "schedule") {
                 // ── 일정 생성 (scheduleController) ──────────
+                // location: CreateModal에서 { name, address, lat, lng } 객체로 옴
+                const rawLoc = data.location;
+                const locationObj = rawLoc && rawLoc.address
+                    ? { name: rawLoc.name || rawLoc.address, address: rawLoc.address, lat: rawLoc.lat || null, lng: rawLoc.lng || null }
+                    : null;
+
                 const body = {
                     title:       data.title,
                     start_at:    data.startAt,
@@ -317,6 +334,7 @@ function App() {
                     user_id:     TEMP_USER_ID,
                     team_id:     data.teamId       || null,
                     updated_by:  TEMP_USER_ID,
+                    location:    locationObj,       // { name, address, lat, lng } or null
                 };
                 await fetch('http://localhost:3001/api/schedules', {
                     method:  'POST',
@@ -369,10 +387,13 @@ function App() {
                         start_at:    data.startAt,
                         end_at:      data.endAt,
                         description: data.description || "",
-                        location:    data.location    || "",
                         priority:    data.priority    || "MEDIUM",
                         category:    data.category    || "ETC",
                         updated_by:  TEMP_USER_ID,
+                        // location 객체: { name, address, lat, lng } 그대로 전달
+                        location:    (data.location && data.location.address)
+                            ? { name: data.location.name || data.location.address, address: data.location.address, lat: data.location.lat || null, lng: data.location.lng || null }
+                            : null,
                     }),
                 });
                 fetchSchedules();
