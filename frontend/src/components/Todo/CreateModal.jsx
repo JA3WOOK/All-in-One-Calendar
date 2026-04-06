@@ -35,15 +35,15 @@ const REPEAT_LABELS = { daily: "일", weekly: "주", monthly: "월" };
  *   onDelete     (data) => void | null
  */
 export default function CreateModal({
-    defaultDate = "",
-    initialData = null,
-    teams = [],
-    teamMembers = {},
-    onTeamSelect,
-    onClose,
-    onSubmit,
-    onDelete,
-}) {
+                                        defaultDate = "",
+                                        initialData = null,
+                                        teams = [],
+                                        teamMembers = {},
+                                        onTeamSelect,
+                                        onClose,
+                                        onSubmit,
+                                        onDelete,
+                                    }) {
     const isEdit = !!initialData;
 
     // ── 탭 / 스코프 ─────────────────────────────
@@ -69,7 +69,14 @@ export default function CreateModal({
     const [startAt, setStartAt] = useState(initialData?.startAt ?? defaultStart);
     const [endAt, setEndAt] = useState(initialData?.endAt ?? defaultEnd);
     const [description, setDescription] = useState(initialData?.description ?? "");
-    const [location, setLocation] = useState(initialData?.location ?? "");
+    // location: { name, address, lat, lng } 객체로 관리
+    const [location, setLocation] = useState(
+        initialData?.location && typeof initialData.location === 'object'
+            ? initialData.location
+            : initialData?.location
+                ? { name: initialData.location, address: initialData.location, lat: null, lng: null }
+                : { name: '', address: '', lat: null, lng: null }
+    );
 
     // ── Todo 전용 ────────────────────────────────
     const [content, setContent] = useState(initialData?.content ?? "");
@@ -137,10 +144,13 @@ export default function CreateModal({
                 const fullAddr = data.roadAddress || data.address;
 
                 // 기존 location State 업데이트
-                setLocation(fullAddr);
-
-                // 만약 나중에 지도에 핀을 꽂기 위해 좌표가 필요하다면
-                // 여기서 카카오 geocoder를 호출하면 됩니다.
+                // location 객체로 저장 (name + address 는 선택된 주소, lat/lng는 추후 geocoder 연동)
+                setLocation({
+                    name:    data.buildingName || fullAddr,
+                    address: fullAddr,
+                    lat:     null,
+                    lng:     null,
+                });
             },
         }).open();
     };
@@ -231,7 +241,7 @@ export default function CreateModal({
                                     <input
                                         style={{ ...s.inlineInput, cursor: "pointer" }}
                                         placeholder="장소 검색 (클릭)"
-                                        value={location}
+                                        value={location.address || ''}
                                         readOnly
                                         onClick={handleAddressSearch}
                                     />
@@ -405,7 +415,7 @@ function ScopeSwitch({ value, onChange, disabled }) {
 function TeamSelect({ teams, value, onChange, disabled }) {
     return (
         <select style={{ ...s.select, width: "100%", opacity: disabled ? 0.6 : 1 }}
-            value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
+                value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
             <option value="">팀 선택</option>
             {teams.map((t) => <option key={t.team_id} value={t.team_id}>{t.team_name}</option>)}
         </select>
@@ -478,7 +488,7 @@ function RepeatOptions({ repeatType, setRepeatType, repeatInterval, setRepeatInt
                     {REPEAT_TYPES.map((t) => <option key={t} value={t}>{REPEAT_LABELS[t]}</option>)}
                 </select>
                 <input type="number" min={1} max={99} style={{ width: 56, ...s.select, textAlign: "center" }}
-                    value={repeatInterval} onChange={(e) => setRepeatInterval(Number(e.target.value))} />
+                       value={repeatInterval} onChange={(e) => setRepeatInterval(Number(e.target.value))} />
                 <span style={{ fontSize: 13, color: MUTED }}>회 반복</span>
             </div>
             <div style={{ height: 1, background: BORDER }} />
@@ -531,7 +541,7 @@ function Chips({ list, labels, active, onChange, colorFn }) {
 // ── 아이콘 ───────────────────────────────────────
 const Ic = ({ d }) => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+         strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
 );
 const ClockSVG = () => <Ic d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 5v5l4 2" />;
 const RepeatSVG = () => <Ic d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4m14 2v2a4 4 0 0 1-4 4H3" />;
@@ -545,8 +555,8 @@ const AssignSVG = () => <Ic d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4
 const DoneSVG = () => <Ic d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />;
 const TrashSVG = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5 }}>
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+         style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5 }}>
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
         <path d="M10 11v6M14 11v6" />
