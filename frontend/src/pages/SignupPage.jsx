@@ -100,9 +100,7 @@ export default function SignupPage() {
 
           <div className="profile-circle">{selectedProfile}</div>
 
-          <button type="button" className="profile-upload-btn">
-            선택 완료
-          </button>
+          
 
           <div className="profile-thumb-list">
             {profiles.map((profile) => (
