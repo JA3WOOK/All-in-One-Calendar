@@ -25,7 +25,7 @@ export default function SignupPage() {
   const [imageSrc, setImageSrc] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
 
-  const profiles = ["👤", "🧑", "👨", "👩", "🙂", null];
+  const profiles = ["👤", "🧑", "👩", null];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,7 +36,7 @@ export default function SignupPage() {
     }));
   };
 
-  // 🔥 수정된 업로드 함수 (모달 연결)
+ 
   const handleProfileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -53,15 +53,14 @@ export default function SignupPage() {
 
     const preview = URL.createObjectURL(file);
 
-    // 👉 기존: 바로 저장 ❌
-    // 👉 변경: 크롭 모달로 보냄 ⭕
+  
     setImageSrc(preview);
     setShowCropModal(true);
 
     e.target.value = "";
   };
 
-  // 🔥 크롭 완료 후 실행
+
   const handleCropComplete = (croppedImage) => {
     const newImage = {
       file: null,
@@ -75,7 +74,7 @@ export default function SignupPage() {
     setImageSrc(null);
   };
 
-  // 🔥 삭제 함수
+  
   const handleRemoveUploadedProfile = (previewToRemove) => {
     setUploadedProfiles((prev) => {
       const updated = prev.filter((item) => item.preview !== previewToRemove);
@@ -238,11 +237,8 @@ export default function SignupPage() {
                         ×
                       </button>
                     </div>
-                  ) : profile === null ? (
-                    "+"
-                  ) : (
-                    profile
-                  )}
+                  ) : profile === null ? null : profile
+                  }
                 </div>
               );
             })}
@@ -280,7 +276,7 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
-
+{/* */}
       <div className="auth-right">
         <div className="auth-card">
           <div className="auth-tab">
@@ -297,6 +293,7 @@ export default function SignupPage() {
                 className="form-input"
                 type="text"
                 name="name"
+                placeholder="이름"
                 value={form.name}
                 onChange={handleChange}
               />
@@ -308,6 +305,7 @@ export default function SignupPage() {
                 className="form-input"
                 type="email"
                 name="email"
+                placeholder="email"
                 value={form.email}
                 onChange={handleChange}
               />
@@ -319,6 +317,7 @@ export default function SignupPage() {
                 className="form-input"
                 type="password"
                 name="password"
+                placeholder="8자리 이상 입력해주세요."
                 value={form.password}
                 onChange={handleChange}
               />
@@ -330,6 +329,7 @@ export default function SignupPage() {
                 className="form-input"
                 type="password"
                 name="passwordConfirm"
+                placeholder="8자리 이상 입력해주세요."
                 value={form.passwordConfirm}
                 onChange={handleChange}
               />

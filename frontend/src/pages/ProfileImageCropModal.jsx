@@ -44,16 +44,23 @@ export default function ProfileImageCropModal({
             <label htmlFor="cropZoom" className="crop-zoom-label">
               확대 / 축소
             </label>
-            <input
-              id="cropZoom"
-              className="crop-zoom-range"
-              type="range"
-              min={1}
-              max={3}
-              step={0.1}
-              value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
-            />
+
+            <span className="zoom-mark">-</span>
+
+            <div className="slider-container">
+              <input
+                id="cropZoom"
+                className="crop-zoom-range"
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+              />
+            </div>
+
+            <span className="zoom-mark">+</span>
           </div>
         </div>
 
