@@ -25,6 +25,7 @@ exports.signup = async (req, res, next) => {
     const name = req.body.name ? String(req.body.name).trim() : "";
     const email = req.body.email ? String(req.body.email).trim() : "";
     const password = req.body.password ? String(req.body.password).trim() : "";
+    const profileImage = req.body.profileImage ? String(req.body.profileImage).trim() : "";
 
     if (!name) {
       return res.status(400).json({ message: "이름을 입력해주세요." });
@@ -43,7 +44,7 @@ exports.signup = async (req, res, next) => {
   }
 };
 
-// refresh
+// 로그인 상태 연장
 exports.refresh = async (req, res, next) => {
   try {
     const refreshToken = req.body.refreshToken

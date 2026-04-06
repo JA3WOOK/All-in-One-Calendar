@@ -2,80 +2,80 @@
   box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#root {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
   font-family: Arial, sans-serif;
   background: #f4f6fb;
 }
 
+body {
+  margin: 0;
+}
+
+/* 전체 레이아웃 */
 .auth-page {
-  width: 100%;
   min-height: 100vh;
   display: flex;
   background: #f4f6fb;
 }
 
-.auth-left,
-.auth-right {
-  width: 50%;
-  padding: 60px 80px;
-}
-
+/* =========================
+   왼쪽 영역
+========================= */
 .auth-left {
-  width: 50%;
+  flex: 1;
   min-height: 100vh;
-  background: #eef1f7;
+  padding: 48px 40px 48px 120px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: flex-start;
-  padding-top: 70px;
 }
 
 .auth-logo {
-  font-size: 72px;
+  font-size: 68px;
   font-weight: 800;
   margin: 0 0 40px 0;
   color: #000;
+  line-height: 1;
 }
 
-.preview-text {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 24px;
-}
-
+/* 로그인 왼쪽 이미지 */
 .calendar-preview {
-  width: 78%;
-  max-width: 620px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.calendar-preview img {
   width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
+  max-width: 620px;
+  height: calc(100vh - 150px);
+  border-radius: 20px;
+  background-image: url("/login_image.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
+/* 회원가입 왼쪽 프로필 영역 */
 .profile-preview-wrap {
+  width: 100%;
+  max-width: 620px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  margin-top: 8px;
 }
 
 .profile-preview-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   margin-bottom: 12px;
+  color: #111;
 }
 
 .profile-preview-desc {
-  font-size: 15px;
-  color: #333;
+  font-size: 16px;
+  color: #555;
   margin-bottom: 28px;
 }
 
@@ -90,107 +90,134 @@ body {
   font-size: 90px;
   color: #666;
   margin-bottom: 24px;
-}
-
-.profile-upload-btn {
-  width: 180px;
-  height: 48px;
-  border: none;
-  border-radius: 12px;
-  background: #5d87f7;
-  color: white;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-bottom: 60px;
+  overflow: hidden;
+  border: 2px solid transparent;
 }
 
 .profile-thumb-list {
   width: 100%;
+  max-width: 560px;
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: auto;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
   padding-top: 24px;
   border-top: 4px solid #5d87f7;
 }
 
 .profile-thumb {
-  width: 92px;
-  height: 92px;
+  width: 82px;
+  height: 82px;
   border-radius: 50%;
   background: #e9ebef;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 36px;
+  font-size: 34px;
   color: #666;
   cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
+.profile-thumb:hover {
+  transform: translateY(-2px);
+  border-color: #bfd0ff;
+}
+
+.profile-thumb.selected {
+  border: 2px solid #5d87f7;
+  background: #eef4ff;
+}
+
+/* =========================
+   오른쪽 영역
+========================= */
 .auth-right {
-  background: #fff;
+  flex: 1;
+  min-height: 100vh;
+  background: #f4f6fb;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 56px;
 }
 
+.auth-card {
+  width: 100%;
+  max-width: 430px;
+  background: #fff;
+  padding: 30px 26px 24px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* 탭 */
 .auth-tab {
   display: flex;
   width: 100%;
-  margin-bottom: 48px;
-  border-bottom: 3px solid #cfcfcf;
+  margin-bottom: 28px;
+  border-bottom: 2px solid #d5d5d5;
 }
 
 .auth-tab-item {
   flex: 1;
   text-align: center;
-  padding: 18px 0;
-  font-size: 20px;
+  padding: 14px 0;
+  font-size: 18px;
   font-weight: 700;
   cursor: pointer;
   position: relative;
+  color: #111;
 }
 
 .auth-tab-item.active::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -3px;
+  bottom: -2px;
   width: 100%;
-  height: 3px;
+  height: 2px;
   background: #5d87f7;
 }
 
+/* =========================
+   폼
+========================= */
 .auth-form {
   width: 100%;
-  max-width: 640px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
 .form-group {
-  margin-bottom: 28px;
+  margin-bottom: 18px;
 }
 
 .form-group label {
   display: block;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 7px;
+  color: #111;
 }
 
 .form-input {
   width: 100%;
-  height: 74px;
-  border: 2px solid #ddd;
-  border-radius: 10px;
-  padding: 0 18px;
-  font-size: 18px;
+  height: 46px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
   outline: none;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-input:focus {
   border-color: #5d87f7;
+  box-shadow: 0 0 0 3px rgba(93, 135, 247, 0.12);
 }
 
 .password-row {
@@ -200,46 +227,311 @@ body {
 .helper-link {
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-top: 8px;
   color: #5d87f7;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
 }
 
+/* 버튼 */
 .auth-btn {
   width: 100%;
-  height: 68px;
+  max-width: 280px;
+  height: 46px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #5d87f7;
   color: #fff;
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  margin-top: 12px;
+  margin: 14px auto 0;
+  display: block;
+  transition: background 0.2s ease;
+}
+
+.auth-btn:hover {
+  background: #4f78e8;
 }
 
 .auth-bottom-text {
   text-align: center;
-  margin-top: 24px;
-  font-size: 16px;
+  margin-top: 18px;
+  font-size: 14px;
+  color: #111;
 }
 
 .auth-bottom-text span {
   color: #5d87f7;
   cursor: pointer;
+  font-weight: 600;
 }
 
 .error-text {
-  margin-top: 16px;
+  margin-top: 14px;
   color: #d93025;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
 }
 
 .success-text {
-  margin-top: 16px;
+  margin-top: 14px;
   color: #1a7f37;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
+}
+
+/* 프로필 */
+.profile-preview-img,
+.profile-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-upload-btn {
+  min-width: 180px;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: #5d87f7;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+  margin-top: 14px;
+  margin-bottom: 36px;
+  transition: background 0.2s ease;
+  text-align: center;
+}
+
+.profile-upload-btn:hover {
+  background: #4f78e8;
+}
+
+.upload-error-text {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #ff4d4f;
+  text-align: center;
+}
+
+.profile-thumb-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.profile-remove-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: #ff4d4f;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* =========================
+   크롭 모달
+========================= */
+.crop-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.crop-modal-box {
+  position: relative;
+  width: 550px;
+  max-width: calc(100vw - 32px);
+  background: #f5f5f5;
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.crop-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #e9e9e9;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 32px;
+  cursor: pointer;
+}
+
+.crop-modal-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 18px;
+}
+
+.crop-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.crop-area {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #e9ebef;
+}
+
+/* 슬라이더 정렬 핵심 */
+.crop-zoom-wrap {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 72px 0 78px;
+  gap: 8px;
+}
+
+.crop-zoom-label {
+  width: 86px;
+  min-width: 86px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  text-align: left;
+}
+
+.zoom-mark {
+  width: 18px;
+  min-width: 18px;
+  font-size: 18px;
+  color: #666;
+  line-height: 1;
+  text-align: center;
+}
+
+.slider-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-right: -12px;
+}
+
+.crop-zoom-range {
+  width: 100%;
+  display: block;
+}
+
+.crop-modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.crop-btn {
+  min-width: 120px;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.crop-btn-cancel {
+  border: 1px solid #d6dbe8;
+  background: #f2f2f2;
+  color: #444;
+}
+
+.crop-btn-confirm {
+  border: none;
+  background: #5d87f7;
+  color: #fff;
+}
+
+/* =========================
+   반응형
+========================= */
+@media (max-width: 1200px) {
+  .auth-left {
+    padding-left: 80px;
+  }
+
+  .auth-logo {
+    font-size: 60px;
+  }
+
+  .calendar-preview {
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .auth-left {
+    display: none;
+  }
+
+  .auth-right {
+    flex: 1;
+    width: 100%;
+    padding: 32px 20px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 430px;
+    background: #fff;
+    padding: 30px 26px 24px;
+    padding-left: 20px;
+  }
+
+  .auth-btn {
+    max-width: 100%;
+  }
+
+  .crop-modal-box {
+    width: calc(100vw - 24px);
+    padding: 22px 18px 20px;
+  }
+
+  .crop-area {
+    height: 280px;
+  }
+
+  .crop-zoom-wrap {
+    padding: 0 20px;
+  }
+
+  .crop-zoom-label {
+    width: 78px;
+    min-width: 78px;
+    font-size: 14px;
+  }
+
+  .slider-container {
+    margin-right: 0;
+  }
 }

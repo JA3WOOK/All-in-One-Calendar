@@ -19,7 +19,6 @@ exports.createAccessToken = (payload) => {
   });
 };
 
-// refresh token 생성
 exports.createRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
