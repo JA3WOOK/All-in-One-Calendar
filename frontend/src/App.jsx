@@ -29,6 +29,19 @@ function App() {
     const [isGroupModalOpen,  setIsGroupModalOpen]  = useState(false);
     const [newGroupName,      setNewGroupName]      = useState('');
     const [newGroupColor,     setNewGroupColor]     = useState('#4a80c4');
+
+    // 팀 수정 모달
+    const [isEditTeamModalOpen,   setIsEditTeamModalOpen]   = useState(false);
+    const [editingTeam,           setEditingTeam]           = useState(null);
+    const [editTeamName,          setEditTeamName]          = useState('');
+    const [editTeamColor,         setEditTeamColor]         = useState('#4a80c4');
+
+    // 팀 삭제 확인 모달
+    const [isDeleteTeamModalOpen, setIsDeleteTeamModalOpen] = useState(false);
+    const [deletingTeam,          setDeletingTeam]          = useState(null);
+
+    // 사이드바 hover
+    const [hoveredTeamId,         setHoveredTeamId]         = useState(null);
     const [isEditModalOpen,   setIsEditModalOpen]   = useState(false);
 
     // ── 선택된 날짜 / 이벤트 ──────────────────────────
@@ -452,7 +465,58 @@ function App() {
             .catch((err) => alert(err.message));
     };
 
-    // ── 9. 필터링 ─────────────────────────────────────
+    // ── 9. 팀 수정 ───────────────────────────────────
+    const handleOpenEditTeam = (e, team) => {
+        e.stopPropagation(); // 체크박스 토글 방지
+        setEditingTeam(team);
+        setEditTeamName(team.team_name);
+        setEditTeamColor(team.team_color ?? '#4a80c4');
+        setIsEditTeamModalOpen(true);
+    };
+
+    const handleSaveEditTeam = () => {
+        if (!editTeamName.trim()) { alert('그룹 이름을 입력해주세요.'); return; }
+        fetch(`http://localhost:3001/api/teams/${editingTeam.team_id}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ name: editTeamName.trim(), team_color: editTeamColor, user_id: TEMP_USER_ID }),
+        })
+            .then((res) => { if (!res.ok) throw new Error('수정 실패'); return res.json(); })
+            .then(() => {
+                setIsEditTeamModalOpen(false);
+                setEditingTeam(null);
+                fetchTeams();
+                // 달력 todo도 색상 갱신
+                fetchTodosForMonth(mainDate.getFullYear(), mainDate.getMonth() + 1, teams);
+            })
+            .catch((err) => alert(err.message));
+    };
+
+    // ── 10. 팀 삭제 ──────────────────────────────────
+    const handleOpenDeleteTeam = (e, team) => {
+        e.stopPropagation();
+        setDeletingTeam(team);
+        setIsDeleteTeamModalOpen(true);
+    };
+
+    const handleConfirmDeleteTeam = () => {
+        fetch(`http://localhost:3001/api/teams/${deletingTeam.team_id}`, {
+            method:  'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ user_id: TEMP_USER_ID }),
+        })
+            .then((res) => { if (!res.ok) throw new Error('삭제 실패'); return res.json(); })
+            .then(() => {
+                setIsDeleteTeamModalOpen(false);
+                setDeletingTeam(null);
+                fetchTeams();
+                fetchSchedules();
+                fetchTodosForMonth(mainDate.getFullYear(), mainDate.getMonth() + 1, teams);
+            })
+            .catch((err) => alert(err.message));
+    };
+
+    // ── 11. 필터링 ─────────────────────────────────────
     // team_id → String 변환으로 타입 불일치 방지
     // filters.teams 에 없는 팀은 기본적으로 표시(true)
     const getTeamFilter = (team_id) => {
@@ -595,14 +659,21 @@ function App() {
                     </div>
                     {isGroupOpen && (
                         <div className="category-list">
-                            {teams.map((team, idx) => {
-                                const checked = filters.teams[String(team.team_id)] || false;
-                                const color   = team.team_color ?? '#4a80c4';
+                            {teams.map((team) => {
+                                const checked  = filters.teams[String(team.team_id)] || false;
+                                const color    = team.team_color ?? '#4a80c4';
+                                const isHovered = hoveredTeamId === team.team_id;
                                 return (
                                     <div
                                         key={team.team_id}
                                         className="category-item"
-                                        style={{ cursor: 'pointer' }}
+                                        style={{
+                                            cursor: 'pointer', position: 'relative',
+                                            background: isHovered ? 'rgba(0,0,0,0.03)' : 'transparent',
+                                            borderRadius: 6, transition: 'background 0.1s',
+                                        }}
+                                        onMouseEnter={() => setHoveredTeamId(team.team_id)}
+                                        onMouseLeave={() => setHoveredTeamId(null)}
                                         onClick={() =>
                                             setFilters((prev) => ({
                                                 ...prev,
@@ -629,8 +700,37 @@ function App() {
                           </svg>
                       )}
                     </span>
-                                        <span style={{ color: checked ? '#2d2d2d' : '#9ca3af', transition: 'color 0.15s' }}>
+                                        <span style={{ color: checked ? '#2d2d2d' : '#9ca3af', transition: 'color 0.15s', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {team.team_name}
+                    </span>
+                                        {/* 수정/삭제 아이콘 — hover 시 표시 */}
+                                        <span style={{
+                                            display:    'flex', gap: 1, flexShrink: 0,
+                                            opacity:    isHovered ? 1 : 0,
+                                            transition: 'opacity 0.1s',
+                                        }}>
+                      <button
+                          title="수정"
+                          onClick={(e) => handleOpenEditTeam(e, team)}
+                          style={{ border:'none', background:'none', cursor:'pointer', padding:'2px 3px', borderRadius:4, display:'flex', alignItems:'center', color:'#1f2937' }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button
+                          title="삭제"
+                          onClick={(e) => handleOpenDeleteTeam(e, team)}
+                          style={{ border:'none', background:'none', cursor:'pointer', padding:'2px 3px', borderRadius:4, display:'flex', alignItems:'center', color:'#c94f4f' }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                          <path d="M10 11v6M14 11v6"/>
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                      </button>
                     </span>
                                     </div>
                                 );
@@ -884,6 +984,109 @@ function App() {
                     </div>
                 </div>
             )}
+
+            {/* ── 팀 수정 모달 ── */}
+            {isEditTeamModalOpen && editingTeam && (
+                <div style={{
+                    position:'fixed', inset:0, background:'rgba(0,0,0,0.35)',
+                    display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000,
+                }}
+                     onClick={(e) => e.target === e.currentTarget && setIsEditTeamModalOpen(false)}
+                >
+                    <div style={{
+                        background:'#fff', borderRadius:12, width:400,
+                        boxShadow:'0 4px 24px rgba(0,0,0,0.14)', padding:'24px 24px 20px',
+                    }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                            <span style={{ fontSize:16, fontWeight:600, color:'#2d2d2d' }}>✏️ 그룹 수정</span>
+                            <button onClick={() => setIsEditTeamModalOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'#9ca3af', lineHeight:1 }}>×</button>
+                        </div>
+
+                        <label style={{ fontSize:12, color:'#6b7280', fontWeight:500 }}>그룹 이름</label>
+                        <input
+                            value={editTeamName}
+                            onChange={(e) => setEditTeamName(e.target.value)}
+                            style={{ display:'block', width:'100%', boxSizing:'border-box', marginTop:6, marginBottom:20, padding:'9px 12px', borderRadius:8, border:'1px solid rgba(0,0,0,0.12)', fontSize:14, outline:'none' }}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSaveEditTeam()}
+                        />
+
+                        <label style={{ fontSize:12, color:'#6b7280', fontWeight:500 }}>팀 색상</label>
+                        <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:8, marginBottom:6 }}>
+                            {TEAM_COLOR_PALETTE.map((color) => (
+                                <button
+                                    key={color}
+                                    onClick={() => setEditTeamColor(color)}
+                                    title={color}
+                                    style={{
+                                        width:28, height:28, borderRadius:'50%',
+                                        background:color, border:'none', cursor:'pointer',
+                                        transition:'transform 0.1s',
+                                        transform: editTeamColor === color ? 'scale(1.15)' : 'scale(1)',
+                                        boxShadow: editTeamColor === color ? `0 0 0 2px #fff, 0 0 0 4px ${color}` : 'none',
+                                    }}
+                                />
+                            ))}
+                        </div>
+
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:10, marginBottom:20 }}>
+                            <div style={{ width:28, height:28, borderRadius:'50%', background:editTeamColor, border:'1px solid rgba(0,0,0,0.1)', flexShrink:0 }} />
+                            <input
+                                type="text"
+                                value={editTeamColor}
+                                onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setEditTeamColor(v); }}
+                                placeholder="#hex"
+                                maxLength={7}
+                                style={{ flex:1, padding:'6px 10px', borderRadius:6, border:'1px solid rgba(0,0,0,0.12)', fontSize:13, outline:'none', letterSpacing:'0.05em', fontFamily:'monospace' }}
+                            />
+                            <input
+                                type="color"
+                                value={editTeamColor.length === 7 ? editTeamColor : '#4a80c4'}
+                                onChange={(e) => setEditTeamColor(e.target.value)}
+                                style={{ width:36, height:36, borderRadius:6, border:'1px solid rgba(0,0,0,0.12)', cursor:'pointer', padding:2 }}
+                            />
+                        </div>
+
+                        <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                            <button onClick={() => setIsEditTeamModalOpen(false)} style={{ padding:'8px 16px', borderRadius:8, border:'1px solid rgba(0,0,0,0.12)', background:'none', color:'#6b7280', fontSize:13, cursor:'pointer' }}>취소</button>
+                            <button onClick={handleSaveEditTeam} style={{ padding:'8px 20px', borderRadius:8, border:'none', background: editTeamColor.length === 7 ? editTeamColor : '#4a80c4', color:'#fff', fontSize:14, fontWeight:600, cursor:'pointer' }}>저장</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── 팀 삭제 확인 모달 ── */}
+            {isDeleteTeamModalOpen && deletingTeam && (
+                <div style={{
+                    position:'fixed', inset:0, background:'rgba(0,0,0,0.35)',
+                    display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000,
+                }}
+                     onClick={(e) => e.target === e.currentTarget && setIsDeleteTeamModalOpen(false)}
+                >
+                    <div style={{
+                        background:'#fff', borderRadius:12, width:360,
+                        boxShadow:'0 4px 24px rgba(0,0,0,0.14)', padding:'24px 24px 20px',
+                    }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+                            <span style={{ fontSize:16, fontWeight:600, color:'#c94f4f' }}>🗑️ 그룹 삭제</span>
+                            <button onClick={() => setIsDeleteTeamModalOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'#9ca3af', lineHeight:1 }}>×</button>
+                        </div>
+
+                        <div style={{ background:'#fff5f5', border:'1px solid #fecaca', borderRadius:8, padding:'12px 14px', marginBottom:20 }}>
+                            <p style={{ margin:0, fontSize:13, color:'#7f1d1d', lineHeight:1.7 }}>
+                                <strong style={{ color:'#991b1b' }}>{deletingTeam.team_name}</strong>을 삭제하면<br/>
+                                소속된 <strong style={{ color:'#991b1b' }}>모든 일정·할일</strong>도 함께 삭제됩니다.<br/>
+                                이 작업은 되돌릴 수 없습니다.
+                            </p>
+                        </div>
+
+                        <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                            <button onClick={() => setIsDeleteTeamModalOpen(false)} style={{ padding:'8px 16px', borderRadius:8, border:'1px solid rgba(0,0,0,0.12)', background:'none', color:'#6b7280', fontSize:13, cursor:'pointer' }}>취소</button>
+                            <button onClick={handleConfirmDeleteTeam} style={{ padding:'8px 20px', borderRadius:8, border:'none', background:'#c94f4f', color:'#fff', fontSize:14, fontWeight:600, cursor:'pointer' }}>삭제</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
