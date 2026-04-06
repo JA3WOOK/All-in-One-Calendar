@@ -4,6 +4,7 @@ require('dotenv').config();
 //요청 접수 (조회/생성/수정/삭제)
 const axios = require('axios');
 const scheduleModel = require('../models/scheduleModel');
+const db = require('../config/db');
 
 // 구글 공휴일 정보를 가져오는 헬퍼 함수
 const fetchHolidays = async () => {
@@ -64,21 +65,74 @@ const getSchedules = async (req, res) => {
 };
 
 const createSchedule = async (req, res) => {
+  const connection = await db.getConnection();
   try {
-    // 프론트에서 보낸 데이터에 user_id가 없을 경우를 대비해 기본값(1)을 넣어줍니다.
-    const scheduleData = {
-      ...req.body,
-      user_id: req.body.user_id || 1 
-    };
+    await connection.beginTransaction();
 
-    const result = await scheduleModel.createSchedule(scheduleData);
-    res.status(201).json({ message: "일정 등록 성공", id: result.insertId });
-  } catch (err) {
-    console.error("일정 생성 에러:", err); // 👈 터미널에 구체적인 에러를 찍어보세요.
-    res.status(500).json({ error: "일정 등록 실패" });
+    // 1. 데이터 구조 분해
+    const { 
+      title, 
+      description, 
+      start_at, 
+      end_at, 
+      category,     // self_dev, work, hobby, exercise, etc
+      priority,     // LOW, MEDIUM, HIGH
+      team_id, 
+      location,     // { name, address, lat, lng }
+      user_id 
+    } = req.body;
+
+    // 인증된 사용자 ID가 없으면 넘겨받은 user_id나 기본값 1 사용
+    const current_user = (req.user && req.user.id) || user_id || 1;
+
+    let location_id = null;
+
+    // 2. 장소 정보 저장 (locations 테이블)
+    if (location && location.address) {
+      const [locResult] = await connection.query(
+        "INSERT INTO locations (location_name, address, latitude, longitude) VALUES (?, ?, ?, ?)",
+        [location.name || title, location.address, location.lat || null, location.lng || null]
+      );
+      location_id = locResult.insertId;
+    }
+
+    // 3. 제약 조건(chk_sche_PorG) 처리
+    // 팀 일정이면 user_id는 NULL, 개인 일정이면 team_id는 NULL
+    const final_user_id = team_id ? null : current_user;
+    const final_team_id = team_id || null;
+
+    // 4. 일정 생성 (schedules 테이블)
+    const [schResult] = await connection.query(
+      `INSERT INTO schedules 
+      (title, description, start_at, end_at, category, priority, user_id, team_id, location_id, created_by) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        title,
+        description || "",
+        start_at,
+        end_at,
+        category || "etc",      // 명세서 ENUM 소문자 기준
+        priority || "MEDIUM", 
+        final_user_id,
+        final_team_id,
+        location_id,
+        current_user            // created_by 필수값
+      ]
+    );
+
+    await connection.commit();
+    res.status(201).json({ success: true, scheduleId: schResult.insertId });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error("일정 생성 에러:", error);
+    res.status(500).json({ error: "일정 저장 중 오류가 발생했습니다.", details: error.message });
+  } finally {
+    connection.release();
   }
 };
 
+//일정 수정
 const editSchedule = async (req, res) => {
   const { id } = req.params;
   const scheduleData = req.body;
@@ -97,6 +151,7 @@ const editSchedule = async (req, res) => {
   }
 };
 
+//일정 삭제
 const removeSchedule = async (req, res) => {
   const { id } = req.params;
   // user_id가 꼭 필요한 로직이 아니라면 이 줄을 지우거나, body가 없을 때를 대비해 기본값을 줍니다.
