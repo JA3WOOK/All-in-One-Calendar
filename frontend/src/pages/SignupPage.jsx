@@ -15,9 +15,12 @@ export default function SignupPage() {
 
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState("👤");
+  const [uploadError, setUploadError] = useState("");
 
-  const profiles = ["👤", "🧑", "👨", "👩", "🙂"];
+  const [selectedProfile, setSelectedProfile] = useState("👤");
+  const [uploadedProfiles, setUploadedProfiles] = useState([]);
+
+  const profiles = ["👤", "🧑", "👨", "👩", "🙂", null];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,6 +29,47 @@ export default function SignupPage() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleProfileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("이미지 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    if (uploadedProfiles.length >= 2) {
+      setUploadError("이미지는 최대 2개까지 업로드할 수 있습니다.");
+      return;
+    }
+
+    const newImage = {
+      file,
+      preview: URL.createObjectURL(file),
+    };
+
+    setUploadedProfiles((prev) => [...prev, newImage]);
+    setSelectedProfile(newImage.preview);
+    setUploadError("");
+
+    // 같은 파일 다시 선택 가능하게 초기화
+    e.target.value = "";
+  };
+
+  const handleRemoveUploadedProfile = (previewToRemove) => {
+    setUploadedProfiles((prev) => {
+      const updated = prev.filter((item) => item.preview !== previewToRemove);
+
+      if (selectedProfile === previewToRemove) {
+        setSelectedProfile("👤");
+      }
+
+      return updated;
+    });
+
+    setUploadError("");
   };
 
   const handleSubmit = async (e) => {
@@ -57,17 +101,26 @@ export default function SignupPage() {
     }
 
     try {
-      const payload = {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        profileImage: selectedProfile,
-      };
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("email", form.email);
+      formData.append("password", form.password);
 
-      const data = await signupApi(payload);
+      const selectedUploadedImage = uploadedProfiles.find(
+        (item) => item.preview === selectedProfile
+      );
+
+      if (selectedUploadedImage) {
+        formData.append("profileImage", selectedUploadedImage.file);
+      } else {
+        formData.append("profileEmoji", selectedProfile);
+      }
+
+      const data = await signupApi(formData);
 
       setMessage(data.message || "회원가입 성공");
       setIsError(false);
+      setUploadError("");
 
       setForm({
         name: "",
@@ -75,6 +128,9 @@ export default function SignupPage() {
         password: "",
         passwordConfirm: "",
       });
+
+      setSelectedProfile("👤");
+      setUploadedProfiles([]);
 
       setTimeout(() => {
         navigate("/login");
@@ -98,22 +154,109 @@ export default function SignupPage() {
             사용할 프로필 이미지를 선택하세요
           </div>
 
-          <div className="profile-circle">{selectedProfile}</div>
+          <div className="profile-circle">
+            {selectedProfile?.startsWith?.("blob:") ? (
+              <img
+                src={selectedProfile}
+                alt="프로필 미리보기"
+                className="profile-preview-img"
+              />
+            ) : (
+              selectedProfile
+            )}
+          </div>
 
-          
+          <label htmlFor="profile-upload" className="profile-upload-btn">
+            이미지 파일 업로드
+          </label>
+
+          <input
+            id="profile-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleProfileUpload}
+            style={{ display: "none" }}
+          />
+
+          {uploadError && (
+            <div className="upload-error-text">{uploadError}</div>
+          )}
 
           <div className="profile-thumb-list">
-            {profiles.map((profile) => (
+            {profiles.map((profile, index) => {
+              let value = profile;
+              let imageData = null;
+
+              if (profile === null) {
+                imageData = uploadedProfiles[0] || null;
+                value = imageData ? imageData.preview : null;
+              }
+
+              return (
+                <div
+                  key={`profile-${index}`}
+                  className={`profile-thumb ${
+                    selectedProfile === value ? "selected" : ""
+                  }`}
+                  onClick={() => {
+                    if (value) setSelectedProfile(value);
+                  }}
+                >
+                  {imageData ? (
+                    <div className="profile-thumb-image-wrap">
+                      <img
+                        src={imageData.preview}
+                        alt="업로드 프로필"
+                        className="profile-thumb-img"
+                      />
+                      <button
+                        type="button"
+                        className="profile-remove-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveUploadedProfile(imageData.preview);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : profile === null ? (
+                    "+"
+                  ) : (
+                    profile
+                  )}
+                </div>
+              );
+            })}
+
+            {uploadedProfiles[1] && (
               <div
-                key={profile}
                 className={`profile-thumb ${
-                  selectedProfile === profile ? "selected" : ""
+                  selectedProfile === uploadedProfiles[1].preview
+                    ? "selected"
+                    : ""
                 }`}
-                onClick={() => setSelectedProfile(profile)}
+                onClick={() => setSelectedProfile(uploadedProfiles[1].preview)}
               >
-                {profile}
+                <div className="profile-thumb-image-wrap">
+                  <img
+                    src={uploadedProfiles[1].preview}
+                    alt="업로드 프로필"
+                    className="profile-thumb-img"
+                  />
+                  <button
+                    type="button"
+                    className="profile-remove-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveUploadedProfile(uploadedProfiles[1].preview);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -135,7 +278,7 @@ export default function SignupPage() {
                 className="form-input"
                 type="text"
                 name="name"
-                placeholder="홍길동"
+                placeholder="이름"
                 value={form.name}
                 onChange={handleChange}
               />
@@ -148,7 +291,7 @@ export default function SignupPage() {
                 className="form-input"
                 type="email"
                 name="email"
-                placeholder="your@gmail.com"
+                placeholder="your@email.com"
                 value={form.email}
                 onChange={handleChange}
               />
