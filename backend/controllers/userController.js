@@ -1,5 +1,5 @@
-// controllers/userController.js
 const userService = require("../services/userService");
+const authService = require("../services/authService");
 
 const getMyProfile = async (req, res) => {
   try {
@@ -21,7 +21,6 @@ const getMyProfile = async (req, res) => {
     res.status(500).json({ message: "서버 오류" });
   }
 };
-
 
 const updateMyProfile = async (req, res) => {
   try {
@@ -50,7 +49,6 @@ const updateMyProfile = async (req, res) => {
   }
 };
 
-
 const changePassword = async (req, res) => {
   try {
     const userId = req.user.user_id;
@@ -77,7 +75,6 @@ const changePassword = async (req, res) => {
   }
 };
 
-
 const deleteMyAccount = async (req, res) => {
   try {
     const userId = req.user.user_id;
@@ -95,55 +92,39 @@ const deleteMyAccount = async (req, res) => {
   }
 };
 
-
 const resetPasswordRequest = async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: "email 필요" });
-    }
+    const result = await authService.requestPasswordReset(email);
 
-    const user = await userService.findUserByEmail(email);
-
-    if (!user) {
-      return res.status(404).json({ message: "해당 이메일 사용자가 없음" });
-    }
-
-    res.status(200).json({
-      message: "재설정 가능한 사용자 확인 완료",
-      data: {
-        user_id: user.user_id,
-        email: user.email,
-      },
-    });
+    res.status(200).json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "서버 오류" });
+    res.status(error.status || 500).json({
+      message: error.message || "서버 오류",
+    });
   }
 };
 
 const resetPassword = async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
+    const { token, newPassword } = req.body;
 
-    if (!email || !newPassword) {
-      return res.status(400).json({ message: "email, newPassword 필요" });
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "token, newPassword 필요" });
     }
 
-    const result = await userService.resetPasswordByEmail(email, newPassword);
+    const result = await authService.resetPasswordWithToken(token, newPassword);
 
-    if (!result) {
-      return res.status(404).json({ message: "해당 이메일 사용자가 없음" });
-    }
-
-    res.status(200).json({ message: "비밀번호 재설정 성공" });
+    res.status(200).json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "서버 오류" });
+    res.status(error.status || 500).json({
+      message: error.message || "서버 오류",
+    });
   }
 };
-
 
 module.exports = {
   getMyProfile,

@@ -1,7 +1,23 @@
-// 공통 설정 파일
 import axios from "axios";
 
-// 1. 비동기 통신을 구현하는 함수를 선언 / 접속하려는 백엔드 및 타 사이트 url 선언
-const API = axios.create({
-  baseURL: "http://localhost:3001/api"
+const api = axios.create({
+  baseURL: "http://localhost:3001",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export default api;
