@@ -358,8 +358,8 @@ function App() {
                 });
                 fetchSchedules();
             } else {
-                // todo PATCH
-                const body = {
+                // ── Todo 수정 ────────────────────────────────────────────
+                const baseBody = {
                     content:       data.content,
                     dueDate:       data.dueDate       || null,
                     priority:      data.priority      || "MEDIUM",
@@ -373,7 +373,42 @@ function App() {
                     assignBy:      data.assignBy      || null,
                     user_id:       TEMP_USER_ID,
                 };
-                await API.patch(`/api/todos/${data.id}`, body);
+
+                // editScope=rebuild: 반복 설정이 있으면 항상 재생성
+                // repeatGroupId 없으면(단일→반복 전환) 기존 단건만 삭제
+                if (data.editScope === "rebuild") {
+                    // ── 재생성: 기존 삭제 후 새 설정으로 재생성 ──
+                    // 1) 기존 삭제 — 반복 그룹이면 전체, 단일이면 단건
+                    const deleteUrl = data.repeatGroupId
+                        ? `/api/todos/${data.id}?scope=group`
+                        : `/api/todos/${data.id}`;
+                    await API.delete(deleteUrl);
+
+                    // 2) 새 설정으로 재생성
+                    const createBody = {
+                        content:        data.content,
+                        dueDate:        data.dueDate       || null,
+                        priority:       data.priority      || "MEDIUM",
+                        category:       data.category      || "ETC",
+                        isCarriedOver:  data.isCarriedOver ?? false,
+                        isRepeat:       data.isRepeat      ?? false,
+                        repeatType:     data.repeatType    || null,
+                        repeatInterval: data.repeatInterval || 1,
+                        repeatEndAt:    data.repeatEndAt   || null,
+                        assignBy:       data.assignBy      || null,
+                        user_id:        TEMP_USER_ID,
+                    };
+
+                    if (data.scope === "team" && data.teamId) {
+                        await API.post(`/api/todos/team/${data.teamId}`, createBody);
+                    } else {
+                        await API.post("/api/todos/personal", createBody);
+                    }
+                } else {
+                    // ── 이 일정만 PATCH ──────────────────────────────────────
+                    await API.patch(`/api/todos/${data.id}`, baseBody);
+                }
+
                 fetchTodosForMonth(mainDate.getFullYear(), mainDate.getMonth() + 1, teams);
             }
         } catch (err) {
