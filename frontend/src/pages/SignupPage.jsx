@@ -305,7 +305,7 @@ export default function SignupPage() {
                 className="form-input"
                 type="email"
                 name="email"
-                placeholder="email"
+                placeholder="your@email.com"
                 value={form.email}
                 onChange={handleChange}
               />

@@ -81,7 +81,7 @@ export default function LoginPage() {
                 className="form-input"
                 type="email"
                 name="email"
-                placeholder="your@gmail.com"
+                placeholder="your@email.com"
                 value={form.email}
                 onChange={handleChange}
               />
