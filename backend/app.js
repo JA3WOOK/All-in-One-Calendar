@@ -4,8 +4,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const authRoutes = require("./routes/authRoutes");
-
-
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
@@ -16,22 +15,19 @@ app.use(cors({
 
 app.use(express.json());
 
-// 기본 확인용
 app.get("/", (req, res) => {
   res.send("로그인 서버 실행 중");
 });
 
-// 인증 라우터
 app.use("/api/auth", authRoutes);
+app.use("/users", userRoutes);
 
-// 등록되지 않은 경로 처리
 app.use((req, res) => {
   res.status(404).json({
     message: "요청한 경로를 찾을 수 없습니다.",
   });
 });
 
-// 전역 에러 처리
 app.use((err, req, res, next) => {
   console.error(err);
 
@@ -42,5 +38,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`서버 실행: http://localhost:${PORT}`);
+  console.log(`서버 실행: http://localhost:3001`);
 });

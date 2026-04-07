@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginApi } from "../api/authApi";
-import "../styles/auth.css";
+import { loginApi } from "../../api/authApi";
+import "../../styles/auth.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -43,9 +43,8 @@ export default function LoginPage() {
 
       setMessage(data.message || "로그인 성공");
 
-      // 로그인 성공 후 이동
       setTimeout(() => {
-        navigate("/calender");
+        navigate("/calendar"); // 팀 라우트 확인
       }, 800);
     } catch (err) {
       setIsError(true);

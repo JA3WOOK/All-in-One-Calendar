@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signupApi } from "../api/authApi";
+import { signupApi } from "../../api/authApi";
 import ProfileImageCropModal from "./ProfileImageCropModal";
-import "../styles/auth.css";
+import "../../styles/auth.css";
 
 export default function SignupPage() {
   const navigate = useNavigate();

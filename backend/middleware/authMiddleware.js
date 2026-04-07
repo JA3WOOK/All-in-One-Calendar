@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+const { verifyAccessToken } = require("../utils/jwtUtil");
 
 const authMiddleware = (req, res, next) => {
   try {
@@ -16,13 +16,14 @@ const authMiddleware = (req, res, next) => {
       return res.status(401).json({ message: "토큰 형식 오류" });
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "mysecretkey"
-    );
+    const decoded = verifyAccessToken(token);
+
+    if (!decoded) {
+      return res.status(401).json({ message: "유효하지 않은 토큰" });
+    }
 
     req.user = {
-      user_id: decoded.user_id
+      user_id: decoded.user_id,
     };
 
     next();
