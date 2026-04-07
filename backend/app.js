@@ -3,7 +3,9 @@ const express = require("express");
 const cors = require("cors"); 
 const pool = require("./config/db"); 
 
-const empRoutes = require("./routes/empRoutes");
+const teamRoutes = require("./routes/teamRoutes"); // 그룹 
+const inviteRoutes = require("./routes/inviteRoutes"); // 초대
+const memberRouter = require('./routes/memberRoutes'); // 멤버관리
 
 const app = express(); 
 
@@ -30,9 +32,13 @@ app.get("/", (req, res) => {
     res.send("Promise 서버 실행 중 (Promise 버전)" ); 
 }); 
 
-app.use("/api", empRoutes);
+
+app.use('/api/invitations', inviteRoutes);
+app.use('/api/members', memberRouter);
+app.use('/api', teamRoutes);
 
 const PORT = 3001; 
+
 app.listen(PORT, () => { 
 console.log(`서버 실행: http://localhost:${PORT}`); 
 }); 

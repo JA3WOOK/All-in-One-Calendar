@@ -1,120 +1,60 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom' // 모달라우팅 
 import './App.css'
+import TeamModal from './components/Team/TeamModal' // 그룹 생성 모달
+import TeamManageModal from "./components/Team/TeamManageModal"; // 그룹 관리 모달
+import MemberManageModal from "./components/Member/MemberManageModal"; // 그룹 멤버 관리 모달
 
 function App() {
-  const [count, setCount] = useState(0)
+  const location = useLocation()
+  const navigate = useNavigate();
+  const background = location.state && location.state.backgroundLocation;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <div className="App">
+      {/* --- 1층: 메인 페이지 (배경) --- */}
+      <Routes location={background || location}>
+        <Route path="/" element={
+          <div style={{ textAlign: 'center', padding: '50px' }}>
+            <h1>메인 캘린더 페이지</h1>
+            <p>달력 공간</p>
+            
+            {/* 테스트용 버튼: 클릭 시 주소 이동 + 배경 정보 전달 */}
+            <button 
+              onClick={() => navigate('/groups/create', { state: { backgroundLocation: location } })}
+              style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' , backgroundColor: '#b5b7ba', color: 'white', border: 'none', borderRadius: '4px' }}
+            >
+              그룹 생성
+            </button>
+
+            <button 
+          onClick={() => navigate('/admin/groups',{ state: { backgroundLocation: location } })} 
+          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', backgroundColor: '#b5b7ba', color: 'white', border: 'none', borderRadius: '4px' }}
         >
-          Count is {count}
+          그룹 관리
         </button>
-      </section>
+      </div>
 
-      <div className="ticks"></div>
+        } />
+        
+      </Routes>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* --- 2층: 모달 레이어 --- */}
+      {background && (
+        <Routes>
+          {/* 그룹 생성 모달 ,onClose={() => navigate(-1) 닫기 누르면 이전으로*/}
+          <Route path="/groups/create" element={<TeamModal onClose={() => navigate(-1)}/>} /> 
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+           {/* 그룹 수정 모달 */}
+          <Route path="/groups/edit" element={<TeamModal onClose={() => navigate(-1)} />} />
+
+           {/* 그룹 관리 모달*/}
+           <Route path="/admin/groups" element={<TeamManageModal onClose={() => navigate(-1)} />} />
+
+            {/* 그룹 멤버 관리 모달*/}
+            <Route path="/groups/:team_id/members" element={<MemberManageModal />} />
+        </Routes>
+      )}
+    </div>
   )
 }
 
