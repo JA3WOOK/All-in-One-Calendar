@@ -40,13 +40,12 @@
   color: #999;
 }
 
-/* 미니 달력 날짜 칸 조절 */
 .mini-day {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 35px; /* 높이를 조금 늘려야 점이 들어갑니다 */
+  height: 35px;
   position: relative;
   cursor: pointer;
 }
@@ -56,7 +55,6 @@
   margin-bottom: 2px;
 }
 
-/* 점(Dot) 컨테이너 */
 .mini-dot-container {
   display: flex;
   gap: 2px;
@@ -64,16 +62,15 @@
   height: 4px;
 }
 
-/* 각 점의 스타일 */
 .mini-dot {
   width: 4px;
   height: 4px;
   border-radius: 50%;
 }
 
-.personal-dot { background-color: #73d13d; } /* 초록색 */
-.team-dot { background-color: #85a5ff; }     /* 파란색 */
-.study-dot { background-color: #ffadd2; border: 1px solid #ffadd2; } /* 분홍색 */
+.personal-dot { background-color: #73d13d; }
+.team-dot     { background-color: #85a5ff; }
+.study-dot    { background-color: #ffadd2; border: 1px solid #ffadd2; }
 
 /* 카테고리 섹션 */
 .category-header {
@@ -86,11 +83,31 @@
   font-weight: bold;
 }
 
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .category-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 5px;
+  padding: 5px;
+  border-radius: 5px;
+  transition: all 0.2s;
+}
+
+.category-item:hover {
+  background-color: #f0f0f0;
+}
+
+.category-item.inactive {
+  opacity: 0.4;
+}
+
+.category-item.inactive span {
+  text-decoration: line-through;
 }
 
 .dot {
@@ -150,41 +167,75 @@
   font-weight: 500 !important;
 }
 
-.fc-event {
+/* 이벤트 기본 스타일 — renderEventContent로 커스텀 렌더링하므로 최소화 */
+.fc-daygrid-event {
   border: none !important;
   border-radius: 4px !important;
-  padding: 2px 4px !important;
+  padding: 0 !important;
+  margin-bottom: 2px !important;
+  background: none !important;
 }
 
-/* 모달 레이아웃 */
+.fc-daygrid-event .fc-event-main {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+/* FullCalendar 기본 제목/시간 숨기기 (renderEventContent가 대신 표시) */
+.fc-event-title,
+.fc-event-time {
+  display: none !important;
+}
+
+.fc-daygrid-event-dot {
+  display: none !important;
+}
+
+/* 모달 */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
 }
+
 .modal-content {
-  background: white; padding: 30px; border-radius: 15px; width: 350px;
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 350px;
 }
+
 .modal-content input {
-  width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
-.modal-btns { display: flex; gap: 10px; margin-top: 20px; }
-.modal-btns button { flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #ddd; }
-.save-btn { background: #333; color: white; border: none !important; }
 
-/* 사이드바 필터 클릭용 스타일 */
+.modal-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-btns button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+}
+
+.save-btn   { background: #333; color: white; border: none !important; }
+.delete-btn { background: #ff4d4f; color: white; border: none !important; }
+
+/* 공통 */
 .cursor-pointer { cursor: pointer; }
-.category-item { transition: all 0.2s; padding: 5px; border-radius: 5px; }
-.category-item:hover { background-color: #f0f0f0; }
 
-/* 필터가 꺼졌을 때 스타일 */
-.category-item.inactive {
-  opacity: 0.4;
-}
-.category-item.inactive span {
-  text-decoration: line-through;
-}
-
-/* 체크박스 기본 스타일 초기화 후 커스텀 색상 */
+/* 체크박스 초기화 */
 input[type="checkbox"] {
   appearance: none;
   width: 18px;
@@ -195,12 +246,11 @@ input[type="checkbox"] {
   position: relative;
 }
 
-/* 체크됐을 때 색상 채우기 */
 input[type="checkbox"]:checked::after {
-  content: '✔'; /* 체크 표시 추가 */
+  content: '✔';
   position: absolute;
   top: 50%; left: 50%;
-  transform: translate(-50%, -50%); /* 정중앙 정렬 */
+  transform: translate(-50%, -50%);
   color: white;
   font-size: 10px;
 }
@@ -212,16 +262,5 @@ input[type="checkbox"]:checked::after {
   color: #090909;
 }
 
-.arrow.up {
-  transform: rotate(0deg);
-}
-
-.arrow.down {
-  transform: rotate(180deg);
-}
-
-/* 시안 색상 매핑 */
-.check-team:checked { background-color: #85a5ff; border-color: #85a5ff; }
-.check-study { border-color: #ffadd2; } /* 테두리만 있는 스타일 */
-.check-study:checked { background-color: #ffadd2; border-color: #ffadd2; }
-.check-personal:checked { background-color: #73d13d; border-color: #73d13d; }
+.arrow.up   { transform: rotate(0deg); }
+.arrow.down { transform: rotate(180deg); }
