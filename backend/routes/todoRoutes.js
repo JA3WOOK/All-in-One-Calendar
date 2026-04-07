@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const todoController = require("../controllers/todoController");
-// const { verifyToken } = require("../middleware/authMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 
-// router.use(verifyToken);
+router.use(authMiddleware);
 
 // ── 자동 미루기 수동 실행  ──────────
 // POST /todos/carry-over/run

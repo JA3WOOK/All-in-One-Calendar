@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import CreateModal from './components/Todo/CreateModal.jsx';
+import TeamManageModal from './components/Team/TeamManageModal.jsx';
 import API from './api/axios';
 import './App.css';
 
-// ── 임시 로그인 유저 (인증 구현 전 테스트용) ──────────
-const TEMP_USER_ID = 1;
+
 
 // 팀 색상 팔레트 (priority/personal 베이지 색상 제외)
 const TEAM_COLOR_PALETTE = [
@@ -20,6 +21,8 @@ const TEAM_COLOR_PALETTE = [
 ];
 
 function App() {
+    const navigate = useNavigate();
+    // 로그인 유저 ID (렌더링마다 최신값)
     const [dbEvents, setDbEvents]               = useState([]);
     const [mainDate, setMainDate]               = useState(new Date());
     const [miniDate, setMiniDate]               = useState(new Date());
@@ -67,7 +70,8 @@ function App() {
     const [isPersonalOpen, setIsPersonalOpen] = useState(true);
 
     const [filters, setFilters] = useState({
-        personal: true,
+        personal:     true,   // 개인 일정
+        personalTodo: true,   // 개인 할일
         teams: {},
         holidays: true,
     });
@@ -75,9 +79,9 @@ function App() {
     const calendarRef = useRef(null);
 
     // ── 1. 일정 목록 불러오기 ──────────────────────────
-    const fetchSchedules = () => {
-        fetch('http://localhost:3001/api/schedules')
-            .then((res) => res.json())
+    const fetchSchedules = (teamList = []) => {
+        API.get('/api/schedules')
+            .then((res) => res.data)
             .then((data) => {
                 const formatted = data.map((item) => {
                     if (item.id && String(item.id).startsWith('holiday')) {
@@ -97,23 +101,31 @@ function App() {
                         title: item.title,
                         start: item.start_at,
                         end: item.end_at,
-                        backgroundColor: item.team_id ? '#85a5ff' : '#73d13d',
-                        borderColor: 'transparent',
-                        textColor: '#ffffff',
+                        // 개인일정: 베이지(할일과 동일), 팀일정: team_color
+                        ...(item.team_id ? (() => {
+                            const t = teamList.find(t => String(t.team_id) === String(item.team_id));
+                            const tc = t?.team_color ?? '#4a80c4';
+                            return { backgroundColor: tc, borderColor: 'transparent', textColor: '#ffffff' };
+                        })() : {
+                            backgroundColor: '#fef3e2',
+                            borderColor: '#c8952a',
+                            textColor: '#2d2d2d',
+                        }),
                         extendedProps: { ...item },
                     };
                 });
                 setDbEvents(formatted);
             })
-            .catch((err) => console.error("일정 로딩 에러:", err));
+            .catch((err) => console.error("일정 로딩 에러:", err?.response?.data || err.message));
     };
 
     // ── 1-1. 팀 목록 불러오기 ─────────────────────────
     const fetchTeams = () => {
-        fetch('http://localhost:3001/api/teams')
-            .then((res) => res.json())
+        API.get('/api/teams')
+            .then((res) => res.data)
             .then((data) => {
                 setTeams(data);
+                fetchSchedules(data); // 팀 색상 적용을 위해 teams 전달
                 const initialTeamFilters = {};
                 // String key로 통일 → getTeamFilter의 String(team_id) 와 일치
                 data.forEach((team) => { initialTeamFilters[String(team.team_id)] = true; });
@@ -204,8 +216,8 @@ function App() {
     };
 
     useEffect(() => {
-        fetchSchedules();
-        fetchTeams();
+        fetchTeams(); // 팀 로드 완료 후 fetchSchedules(teams) 내부에서 호출
+        fetchSchedules([]); // 공휴일 및 개인 일정 선 로드
     }, []);
 
     // ── 2. 미니 달력 ──────────────────────────────────
@@ -262,10 +274,15 @@ function App() {
 
         if (ep.eventType === 'todo') {
             // ── Todo ─────────────────────────────────────────────────────
+            // 팀 이벤트이면 내 role 확인 → VIEWER면 viewOnly
+            const todoTeamRole = ep.team_id
+                ? (teams.find(t => String(t.team_id) === String(ep.team_id))?.role ?? 'VIEWER')
+                : null;
             setSelectedEvent({
                 type:          'todo',
                 id:            ep.todo_id,
                 scope:         ep.team_id ? 'team' : 'personal',
+                viewOnly:      todoTeamRole === 'VIEWER',
                 content:       ep.content       ?? info.event.title,
                 dueDate:       ep.due_date      ? String(ep.due_date).slice(0, 10) : "",
                 category:      ep.category      ?? "",
@@ -306,6 +323,9 @@ function App() {
                 priority:    ep.priority    ?? "MEDIUM",
                 isRepeat:    false,
                 teamId:      ep.team_id    ?? null,
+                viewOnly:    ep.team_id
+                    ? (teams.find(t => String(t.team_id) === String(ep.team_id))?.role ?? 'VIEWER') === 'VIEWER'
+                    : false,
             });
         }
         setIsEditModalOpen(true);
@@ -331,17 +351,11 @@ function App() {
                     description: data.description  || "",
                     priority:    data.priority     || "MEDIUM",
                     category:    data.category     || "ETC",
-                    user_id:     TEMP_USER_ID,
                     team_id:     data.teamId       || null,
-                    updated_by:  TEMP_USER_ID,
-                    location:    locationObj,       // { name, address, lat, lng } or null
+                    location:    locationObj,
                 };
-                await fetch('http://localhost:3001/api/schedules', {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify(body),
-                });
-                fetchSchedules();
+                await API.post('/api/schedules', body);
+                fetchSchedules(teams);
 
             } else {
                 // ── Todo 생성 (todoController) ───────────────
@@ -355,7 +369,6 @@ function App() {
                     repeatType:     data.repeatType     || null,
                     repeatInterval: data.repeatInterval || 1,
                     repeatEndAt:    data.repeatEndAt    || null,
-                    user_id:        TEMP_USER_ID,       // 인증 없을 때 컨트롤러 fallback용
                 };
 
                 if (data.scope === "team" && data.teamId) {
@@ -379,24 +392,18 @@ function App() {
     const handleEditSubmit = async (data) => {
         try {
             if (data.type === 'schedule') {
-                await fetch(`http://localhost:3001/api/schedules/${data.id}`, {
-                    method:  'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title:       data.title,
-                        start_at:    data.startAt,
-                        end_at:      data.endAt,
-                        description: data.description || "",
-                        priority:    data.priority    || "MEDIUM",
-                        category:    data.category    || "ETC",
-                        updated_by:  TEMP_USER_ID,
-                        // location 객체: { name, address, lat, lng } 그대로 전달
-                        location:    (data.location && data.location.address)
-                            ? { name: data.location.name || data.location.address, address: data.location.address, lat: data.location.lat || null, lng: data.location.lng || null }
-                            : null,
-                    }),
+                await API.put(`/api/schedules/${data.id}`, {
+                    title:       data.title,
+                    start_at:    data.startAt,
+                    end_at:      data.endAt,
+                    description: data.description || "",
+                    priority:    data.priority    || "MEDIUM",
+                    category:    data.category    || "ETC",
+                    location:    (data.location && data.location.address)
+                        ? { name: data.location.name || data.location.address, address: data.location.address, lat: data.location.lat || null, lng: data.location.lng || null }
+                        : null,
                 });
-                fetchSchedules();
+                fetchSchedules(teams);
             } else {
                 // ── Todo 수정 ────────────────────────────────────────────
                 const baseBody = {
@@ -411,7 +418,6 @@ function App() {
                     repeatInterval:data.repeatInterval || 1,
                     repeatEndAt:   data.repeatEndAt   || null,
                     assignBy:      data.assignBy      || null,
-                    user_id:       TEMP_USER_ID,
                 };
 
                 // editScope=rebuild: 반복 설정이 있으면 항상 재생성
@@ -436,7 +442,6 @@ function App() {
                         repeatInterval: data.repeatInterval || 1,
                         repeatEndAt:    data.repeatEndAt   || null,
                         assignBy:       data.assignBy      || null,
-                        user_id:        TEMP_USER_ID,
                     };
 
                     if (data.scope === "team" && data.teamId) {
@@ -461,8 +466,8 @@ function App() {
     const handleDeleteEvent = async (data) => {
         try {
             if (data.type === 'schedule') {
-                await fetch(`http://localhost:3001/api/schedules/${data.id}`, { method: 'DELETE' });
-                fetchSchedules();
+                await API.delete(`/api/schedules/${data.id}`);
+                fetchSchedules(teams);
             } else {
                 const params = data.scope === 'group' ? '?scope=group' : '';
                 await API.delete(`/api/todos/${data.id}${params}`);
@@ -477,19 +482,14 @@ function App() {
     // ── 8. 그룹 저장 ─────────────────────────────────
     const handleSaveGroup = () => {
         if (!newGroupName.trim()) { alert('그룹 이름을 입력해주세요.'); return; }
-        fetch('http://localhost:3001/api/teams', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ name: newGroupName.trim(), team_color: newGroupColor, user_id: TEMP_USER_ID }),
-        })
-            .then((res) => { if (!res.ok) throw new Error('그룹 생성 실패'); return res.json(); })
+        API.post('/api/teams', { name: newGroupName.trim(), team_color: newGroupColor })
             .then(() => {
                 setIsGroupModalOpen(false);
                 setNewGroupName('');
                 setNewGroupColor('#4a80c4');
                 fetchTeams();
             })
-            .catch((err) => alert(err.message));
+            .catch((err) => alert(err.response?.data?.message || '그룹 생성 실패'));
     };
 
     // ── 9. 팀 수정 ───────────────────────────────────
@@ -503,12 +503,7 @@ function App() {
 
     const handleSaveEditTeam = () => {
         if (!editTeamName.trim()) { alert('그룹 이름을 입력해주세요.'); return; }
-        fetch(`http://localhost:3001/api/teams/${editingTeam.team_id}`, {
-            method:  'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ name: editTeamName.trim(), team_color: editTeamColor, user_id: TEMP_USER_ID }),
-        })
-            .then((res) => { if (!res.ok) throw new Error('수정 실패'); return res.json(); })
+        API.put(`/api/teams/${editingTeam.team_id}`, { name: editTeamName.trim(), team_color: editTeamColor })
             .then(() => {
                 setIsEditTeamModalOpen(false);
                 setEditingTeam(null);
@@ -516,7 +511,7 @@ function App() {
                 // 달력 todo도 색상 갱신
                 fetchTodosForMonth(mainDate.getFullYear(), mainDate.getMonth() + 1, teams);
             })
-            .catch((err) => alert(err.message));
+            .catch((err) => alert(err.response?.data?.message || '수정 실패'));
     };
 
     // ── 10. 팀 삭제 ──────────────────────────────────
@@ -527,17 +522,12 @@ function App() {
     };
 
     const handleConfirmDeleteTeam = () => {
-        fetch(`http://localhost:3001/api/teams/${deletingTeam.team_id}`, {
-            method:  'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ user_id: TEMP_USER_ID }),
-        })
-            .then((res) => { if (!res.ok) throw new Error('삭제 실패'); return res.json(); })
+        API.delete(`/api/teams/${deletingTeam.team_id}`)
             .then(() => {
                 setIsDeleteTeamModalOpen(false);
                 setDeletingTeam(null);
                 fetchTeams();
-                fetchSchedules();
+                fetchSchedules(teams);
                 fetchTodosForMonth(mainDate.getFullYear(), mainDate.getMonth() + 1, teams);
             })
             .catch((err) => alert(err.message));
@@ -562,7 +552,8 @@ function App() {
     const filteredTodos = todoEvents.filter((event) => {
         const teamFilter = getTeamFilter(event.extendedProps?.team_id);
         if (teamFilter !== null) return teamFilter;
-        return filters.personal;
+        // 개인 할일은 personalTodo 필터로 별도 제어
+        return filters.personalTodo;
     });
 
     const filteredEvents = [...filteredSchedules, ...filteredTodos];
@@ -732,35 +723,29 @@ function App() {
                                         <span style={{ color: checked ? '#2d2d2d' : '#9ca3af', transition: 'color 0.15s', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {team.team_name}
                     </span>
-                                        {/* 수정/삭제 아이콘 — hover 시 표시 */}
-                                        <span style={{
-                                            display:    'flex', gap: 1, flexShrink: 0,
-                                            opacity:    isHovered ? 1 : 0,
-                                            transition: 'opacity 0.1s',
-                                        }}>
-                      <button
-                          title="수정"
-                          onClick={(e) => handleOpenEditTeam(e, team)}
-                          style={{ border:'none', background:'none', cursor:'pointer', padding:'2px 3px', borderRadius:4, display:'flex', alignItems:'center', color:'#1f2937' }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                      <button
-                          title="삭제"
-                          onClick={(e) => handleOpenDeleteTeam(e, team)}
-                          style={{ border:'none', background:'none', cursor:'pointer', padding:'2px 3px', borderRadius:4, display:'flex', alignItems:'center', color:'#c94f4f' }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                          <path d="M10 11v6M14 11v6"/>
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                        </svg>
-                      </button>
-                    </span>
+                                        {/* 수정: OWNER/EDITOR만, 삭제: OWNER만 */}
+                                        {(team.role === 'OWNER' || team.role === 'EDITOR') && (
+                                            <span style={{ display:'flex', gap:1, flexShrink:0, opacity: isHovered ? 1 : 0, transition:'opacity 0.1s' }}>
+                                          <button title="수정" onClick={(e) => handleOpenEditTeam(e, team)}
+                                                  style={{ border:'none', background:'none', cursor:'pointer', padding:'2px 3px', borderRadius:4, display:'flex', alignItems:'center', color:'#1f2937' }}>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                            </svg>
+                                          </button>
+                                                {team.role === 'OWNER' && (
+                                                    <button title="삭제" onClick={(e) => handleOpenDeleteTeam(e, team)}
+                                                            style={{ border:'none', background:'none', cursor:'pointer', padding:'2px 3px', borderRadius:4, display:'flex', alignItems:'center', color:'#c94f4f' }}>
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <polyline points="3 6 5 6 21 6"/>
+                                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                                            <path d="M10 11v6M14 11v6"/>
+                                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                        </span>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -776,32 +761,51 @@ function App() {
                     </div>
                     {isPersonalOpen && (
                         <div className="category-list">
+                            {/* 개인 일정 */}
                             <div
                                 className="category-item"
                                 style={{ cursor: 'pointer' }}
                                 onClick={() => setFilters((prev) => ({ ...prev, personal: !prev.personal }))}
                             >
-                <span style={{
-                    display:        'inline-flex',
-                    alignItems:     'center',
-                    justifyContent: 'center',
-                    width:          16,
-                    height:         16,
-                    borderRadius:   4,
-                    border:         `2px solid ${filters.personal ? '#22c55e' : '#ccc'}`,
-                    background:     filters.personal ? '#22c55e' : '#fff',
-                    flexShrink:     0,
-                    transition:     'all 0.15s',
-                }}>
-                  {filters.personal && (
-                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                          <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                  )}
-                </span>
+                                <span style={{
+                                    display:'inline-flex', alignItems:'center', justifyContent:'center',
+                                    width:16, height:16, borderRadius:4,
+                                    border:`2px solid ${filters.personal ? '#22c55e' : '#ccc'}`,
+                                    background: filters.personal ? '#22c55e' : '#fff',
+                                    flexShrink:0, transition:'all 0.15s',
+                                }}>
+                                    {filters.personal && (
+                                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                            <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                    )}
+                                </span>
                                 <span style={{ color: filters.personal ? '#2d2d2d' : '#9ca3af', transition: 'color 0.15s' }}>
-                  개인 일정
-                </span>
+                                    개인 일정
+                                </span>
+                            </div>
+                            {/* 개인 할일 */}
+                            <div
+                                className="category-item"
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => setFilters((prev) => ({ ...prev, personalTodo: !prev.personalTodo }))}
+                            >
+                                <span style={{
+                                    display:'inline-flex', alignItems:'center', justifyContent:'center',
+                                    width:16, height:16, borderRadius:4,
+                                    border:`2px solid ${filters.personalTodo ? '#22c55e' : '#ccc'}`,
+                                    background: filters.personalTodo ? '#22c55e' : '#fff',
+                                    flexShrink:0, transition:'all 0.15s',
+                                }}>
+                                    {filters.personalTodo && (
+                                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                            <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                    )}
+                                </span>
+                                <span style={{ color: filters.personalTodo ? '#2d2d2d' : '#9ca3af', transition: 'color 0.15s' }}>
+                                    개인 할일
+                                </span>
                             </div>
                         </div>
                     )}
@@ -831,6 +835,7 @@ function App() {
                     {/* 마이페이지 아이콘 */}
                     <button
                         title="마이페이지"
+                        onClick={() => navigate('/mypage')}
                         style={{ width:44, height:44, borderRadius:'50%', background:'#e5e7eb', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#374151', flexShrink:0, transition:'background 0.15s' }}
                         onMouseEnter={(e) => e.currentTarget.style.background='#d1d5db'}
                         onMouseLeave={(e) => e.currentTarget.style.background='#e5e7eb'}
@@ -907,6 +912,10 @@ function App() {
             .fc-prev-button, .fc-next-button { padding: 6px 10px !important; }
             .fc-today-button:disabled { opacity: 0.4 !important; }
             .fc-toolbar-chunk { display: flex !important; align-items: center !important; gap: 4px !important; }
+
+            /* 오늘 날짜: 연노랑 → 옅은 회색 */
+            .fc-day-today { background: #f3f4f6 !important; }
+            .fc-day-today .fc-daygrid-day-number { color: #374151 !important; font-weight: 700; }
           `}</style>
                     <FullCalendar
                         ref={calendarRef}
@@ -950,25 +959,17 @@ function App() {
                     teamMembers={teamMembers}
                     onTeamSelect={fetchTeamMembers}
                     onClose={() => { setIsEditModalOpen(false); setSelectedEvent(null); }}
-                    onSubmit={handleEditSubmit}
-                    onDelete={handleDeleteEvent}
+                    onSubmit={selectedEvent.viewOnly ? undefined : handleEditSubmit}
+                    onDelete={selectedEvent.viewOnly ? undefined : handleDeleteEvent}
+                    viewOnly={selectedEvent.viewOnly}
                 />
             )}
 
-            {/* ── 그룹 관리 모달 (내용 추후 연결 예정) ── */}
+            {/* ── 그룹 관리 모달 ── */}
             {isTeamManageOpen && (
-                <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}
-                     onClick={(e) => e.target === e.currentTarget && setIsTeamManageOpen(false)}>
-                    <div style={{ background:'#fff', borderRadius:12, width:420, boxShadow:'0 4px 24px rgba(0,0,0,0.14)', padding:'24px 24px 20px' }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-                            <span style={{ fontSize:16, fontWeight:600, color:'#2d2d2d' }}>그룹 관리</span>
-                            <button onClick={() => setIsTeamManageOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'#9ca3af', lineHeight:1 }}>×</button>
-                        </div>
-                        <div style={{ padding:'32px 0', textAlign:'center', color:'#9ca3af', fontSize:13 }}>
-                            준비 중입니다.
-                        </div>
-                    </div>
-                </div>
+                <TeamManageModal
+                    onClose={() => { setIsTeamManageOpen(false); fetchTeams(); }}
+                />
             )}
 
             {/* ── 그룹 생성 모달 ── */}

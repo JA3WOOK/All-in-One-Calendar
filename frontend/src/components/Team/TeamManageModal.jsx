@@ -1,51 +1,78 @@
 import { useState } from "react";
 import TeamList from "./TeamList";
-import ReceivedInvites from "./ReceivedInvites"; 
+import ReceivedInvites from "./ReceivedInvites";
+import TeamModal from "./TeamModal";
+import MemberManageModal from "../Member/MemberManageModal";
 
 function TeamManageModal({ onClose }) {
   const [reloadKey, setReloadKey] = useState(0);
+  const [editingTeam, setEditingTeam] = useState(null);
+  const [managingTeam, setManagingTeam] = useState(null);
 
-  // 리스트 갱신용 함수
   const handleRefresh = () => setReloadKey(prev => prev + 1);
+  const handleEdit = (team) => setEditingTeam(team);
+  const handleViewMembers = (team) => setManagingTeam(team);
 
   return (
-    <div className="modal-overlay" style={overlayStyle}>
-      <div className="modal-content" style={contentStyle}>
-        <div style={headerStyle}>
-          <h2 style={{ margin: 0 }}>그룹 관리</h2>
-          <button onClick={onClose} style={closeBtnStyle}>&times;</button>
-        </div>
-        
-        <hr style={{ margin: '15px 0' }} />
+      <>
+        <div className="modal-overlay" style={overlayStyle}>
+          <div className="modal-content" style={contentStyle}>
+            <div style={headerStyle}>
+              <h2 style={{margin: 0}}>그룹 관리</h2>
+              <button onClick={onClose} style={closeBtnStyle}>&times;</button>
+            </div>
 
-        {/* 1. 내가 받은 초대장   */}
-        <div style={sectionStyle}>
-          <h3 style={sectionTitleStyle}>📩 나를 초대한 그룹</h3>
-          <ReceivedInvites onRefresh={handleRefresh} />
-        </div>
+            <hr style={{margin: '15px 0'}}/>
 
-        <div style={{ margin: '30px 0' }}></div>
+            {/* 1. 내가 받은 초대장 */}
+            <div style={sectionStyle}>
+              <h3 style={sectionTitleStyle}>📩 나를 초대한 그룹</h3>
+              <ReceivedInvites onRefresh={handleRefresh}/>
+            </div>
 
-        {/* 2. 참여 중인 그룹 목록  */}
-        <div style={sectionStyle}>
-          <h3 style={sectionTitleStyle}>👥 참여 중인 그룹</h3>
-          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-            <TeamList 
-              showAdminButtons={true} 
-              reloadKey={reloadKey} 
-              setReloadKey={setReloadKey} 
-            />
+            <div style={{margin: '30px 0'}}></div>
+
+            {/* 2. 참여 중인 그룹 목록 */}
+            <div style={sectionStyle}>
+              <h3 style={sectionTitleStyle}>👥 참여 중인 그룹</h3>
+              <div style={{maxHeight: '300px', overflowY: 'auto'}}>
+                <TeamList
+                    showAdminButtons={true}
+                    reloadKey={reloadKey}
+                    setReloadKey={setReloadKey}
+                    onEdit={handleEdit}
+                    onViewMembers={handleViewMembers}
+                />
+              </div>
+            </div>
+
+            <div style={{marginTop: '20px', textAlign: 'right'}}>
+              <button onClick={onClose} style={doneBtnStyle}>닫기</button>
+            </div>
           </div>
         </div>
 
-        <div style={{ marginTop: '20px', textAlign: 'right' }}>
-          <button onClick={onClose} style={doneBtnStyle}>닫기</button>
-        </div>
-      </div>
-    </div>
+        {editingTeam && (
+            <TeamModal
+                selectedTeam={editingTeam}
+                onClose={() => {
+                  setEditingTeam(null);
+                  handleRefresh();
+                }}
+                onRefresh={handleRefresh}
+            />
+        )}
+
+        {managingTeam && (
+            <MemberManageModal
+                teamId={managingTeam.team_id}
+                teamName={managingTeam.team_name}
+                onClose={() => setManagingTeam(null)}
+            />
+        )}
+      </>
   );
 }
-
 // 스타일
 const sectionStyle = { textAlign: 'left' };
 const sectionTitleStyle = { fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: '#555' };

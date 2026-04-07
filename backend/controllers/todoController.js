@@ -1,17 +1,6 @@
 const todoModel = require("../models/todoModel");
 
 // ──────────────────────────────────────────────
-// 공통 헬퍼: 인증 미들웨어 없이도 동작하도록 user_id 추출
-// 우선순위: req.user(JWT) → req.body → req.query → 기본값 1
-// ──────────────────────────────────────────────
-const getUserId = (req) => {
-    if (req.user?.user_id)                    return Number(req.user.user_id);
-    if (req.body?.user_id != null)            return Number(req.body.user_id);
-    if (req.query?.user_id != null)           return Number(req.query.user_id);
-    return 1; // 개발용 임시 기본값
-};
-
-// ──────────────────────────────────────────────
 // 팀 멤버 조회
 // GET /todos/team/:team_id/members
 // ──────────────────────────────────────────────
@@ -32,7 +21,7 @@ exports.getTeamMembers = async (req, res) => {
 // ──────────────────────────────────────────────
 exports.getPersonalTodos = async (req, res) => {
     try {
-        const user_id = getUserId(req);
+        const user_id = req.user.user_id;
         const { type, date, start, end } = req.query;
 
         let todos;
@@ -59,7 +48,7 @@ exports.getPersonalTodos = async (req, res) => {
 // ──────────────────────────────────────────────
 exports.createPersonalTodo = async (req, res) => {
     try {
-        const user_id = getUserId(req);
+        const user_id = req.user.user_id;
         const {
             content, dueDate, priority, category,
             isCarriedOver, isRepeat, repeatType, repeatInterval, repeatEndAt,
@@ -134,7 +123,7 @@ exports.getTeamTodos = async (req, res) => {
 // ──────────────────────────────────────────────
 exports.createTeamTodo = async (req, res) => {
     try {
-        const user_id  = getUserId(req);
+        const user_id  = req.user.user_id;
         const { team_id } = req.params;
         const {
             content, dueDate, priority, category, assignBy,
@@ -183,7 +172,7 @@ exports.createTeamTodo = async (req, res) => {
 // ──────────────────────────────────────────────
 exports.getCalendarTodos = async (req, res) => {
     try {
-        const user_id = getUserId(req);
+        const user_id = req.user.user_id;
         const { year, month, team_id } = req.query;
 
         if (!year || !month) {
@@ -217,7 +206,7 @@ exports.getCalendarTodos = async (req, res) => {
 // ──────────────────────────────────────────────
 exports.updateTodo = async (req, res) => {
     try {
-        const user_id  = getUserId(req);
+        const user_id  = req.user.user_id;
         const { todo_id } = req.params;
         const { scope }   = req.query;
 
@@ -267,7 +256,7 @@ exports.updateTodo = async (req, res) => {
 // ──────────────────────────────────────────────
 exports.deleteTodo = async (req, res) => {
     try {
-        const user_id  = getUserId(req);
+        const user_id  = req.user.user_id;
         const { todo_id } = req.params;
         const { scope }   = req.query;
 

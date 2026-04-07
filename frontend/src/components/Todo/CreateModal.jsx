@@ -43,6 +43,7 @@ export default function CreateModal({
                                         onClose,
                                         onSubmit,
                                         onDelete,
+                                        viewOnly = false,
                                     }) {
     const isEdit = !!initialData;
 
@@ -103,6 +104,12 @@ export default function CreateModal({
     };
 
     const handleSubmit = () => {
+        if (viewOnly) return; // VIEWER는 저장 불가
+        // 팀 탭인데 팀 미선택 시 차단
+        if (scope === 'team' && !teamId) {
+            alert('그룹을 선택해주세요.');
+            return;
+        }
         const base = {
             id: initialData?.id ?? null,
             category, priority,
@@ -187,7 +194,7 @@ export default function CreateModal({
                                 fontSize: 11, fontWeight: 600, color: ACCENT,
                                 background: SURFACE, border: `1px solid ${BORDER}`,
                                 borderRadius: 4, padding: "2px 8px", letterSpacing: "0.03em",
-                            }}>수정 중</span>
+                            }}>{viewOnly ? "보기 전용" : "수정 중"}</span>
                         )}
                     </div>
                     <button style={s.iconBtn} onClick={onClose}><CloseSVG /></button>
@@ -210,7 +217,7 @@ export default function CreateModal({
                             <TabBtn active={tab === "schedule"} onClick={() => !isEdit && setTab("schedule")} disabled={isEdit}>일정</TabBtn>
                             <TabBtn active={tab === "todo"} onClick={() => !isEdit && setTab("todo")} disabled={isEdit}>할 일</TabBtn>
                         </div>
-                        <ScopeSwitch value={scope} onChange={handleScopeChange} disabled={isEdit} />
+                        <ScopeSwitch value={scope} onChange={handleScopeChange} disabled={isEdit} noTeam={teams.length === 0} />
                     </div>
                 </div>
 
@@ -367,19 +374,30 @@ export default function CreateModal({
 
                 {/* ── 푸터 ── */}
                 <div style={s.footer}>
-                    {isEdit && onDelete ? (
-                        <button style={s.deleteBtn} onClick={handleDelete}>
-                            <TrashSVG />삭제
-                        </button>
+                    {viewOnly ? (
+                        <>
+                            <span style={{ fontSize: 12, color: '#9ca3af', display:'flex', alignItems:'center', gap:4 }}>
+                                👁 보기 전용 (VIEWER)
+                            </span>
+                            <button style={s.cancelBtn} onClick={onClose}>닫기</button>
+                        </>
                     ) : (
-                        <span />
+                        <>
+                            {isEdit && onDelete ? (
+                                <button style={s.deleteBtn} onClick={handleDelete}>
+                                    <TrashSVG />삭제
+                                </button>
+                            ) : (
+                                <span />
+                            )}
+                            <div style={{ display: "flex", gap: 8 }}>
+                                <button style={s.cancelBtn} onClick={onClose}>취소</button>
+                                <button style={s.saveBtn} onClick={handleSubmit}>
+                                    {isEdit ? "수정 저장" : "저장"}
+                                </button>
+                            </div>
+                        </>
                     )}
-                    <div style={{ display: "flex", gap: 8 }}>
-                        <button style={s.cancelBtn} onClick={onClose}>취소</button>
-                        <button style={s.saveBtn} onClick={handleSubmit}>
-                            {isEdit ? "수정 저장" : "저장"}
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -388,26 +406,33 @@ export default function CreateModal({
 
 // ── 서브 컴포넌트 ─────────────────────────────────
 
-function ScopeSwitch({ value, onChange, disabled }) {
+function ScopeSwitch({ value, onChange, disabled, noTeam }) {
     return (
         <div style={{
             display: "flex", gap: 2, background: SURFACE, borderRadius: 8, padding: 2,
             border: `1px solid ${BORDER}`, marginBottom: 6,
             opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? "none" : "auto"
         }}>
-            {[["personal", "개인"], ["team", "팀"]].map(([v, l]) => (
-                <button key={v} onClick={() => onChange(v)} style={{
-                    background: value === v ? "#fff" : "none",
-                    border: "none",
-                    borderRadius: 6,
-                    color: value === v ? TEXT : MUTED,
-                    fontSize: 13,
-                    padding: "4px 12px",
-                    cursor: disabled ? "default" : "pointer",
-                    fontWeight: value === v ? 500 : 400,
-                    boxShadow: value === v ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                }}>{l}</button>
-            ))}
+            {[["personal", "개인"], ["team", "팀"]].map(([v, l]) => {
+                const teamBlocked = v === "team" && noTeam;
+                return (
+                    <button key={v}
+                            onClick={() => !teamBlocked && onChange(v)}
+                            title={teamBlocked ? "소속된 그룹이 없습니다" : undefined}
+                            style={{
+                                background: value === v ? "#fff" : "none",
+                                border: "none",
+                                borderRadius: 6,
+                                color: teamBlocked ? "#d1d5db" : value === v ? TEXT : MUTED,
+                                fontSize: 13,
+                                padding: "4px 12px",
+                                cursor: teamBlocked ? "not-allowed" : disabled ? "default" : "pointer",
+                                fontWeight: value === v ? 500 : 400,
+                                boxShadow: value === v ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                                opacity: teamBlocked ? 0.4 : 1,
+                            }}>{l}</button>
+                );
+            })}
         </div>
     );
 }

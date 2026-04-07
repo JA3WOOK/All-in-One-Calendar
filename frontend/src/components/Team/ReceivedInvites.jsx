@@ -1,6 +1,6 @@
 // 내가 받은 초대 목록 , 관리
 import { useState , useEffect } from "react";
-import axios from "axios";
+import API from '../../api/axios';
 
 function ReceivedInvites({ onRefresh }) {
 
@@ -10,8 +10,7 @@ function ReceivedInvites({ onRefresh }) {
   useEffect(() => {
     const fetchInvites = async () => {
       try {
-        const myId = 1;
-        const res = await axios.get(`/api/invitations/receivelist?user_id=${myId}`);
+        const res = await API.get('/api/invitations/receivelist');
         setInvites(res.data || []);
       } catch (err) {
         console.error("초대 목록 로드 실패", err);
@@ -23,12 +22,12 @@ function ReceivedInvites({ onRefresh }) {
   // 받은 초대 관리
   const handleAction = async (inviteId, status) => {
     try {
-      await axios.put("/api/invitations/response",{
+      await API.put("/api/invitations/response", {
         status : status,
         invite_id : inviteId
       });
       alert(status === 'ACCEPTED' ? "그룹에 합류했습니다!" : "초대를 거절했습니다.");
-      if (onRefresh) onRefresh(); 
+      if (onRefresh) onRefresh();
     } catch (err) {
       alert("처리 중 오류가 발생했습니다.",err);
     }
@@ -37,20 +36,20 @@ function ReceivedInvites({ onRefresh }) {
   if (invites.length === 0) return <p style={{ fontSize: '13px', color: '#ccc', textAlign: 'center' }}>도착한 초대가 없습니다.</p>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {invites.map((invite) => (
-        <div key={invite.invite_id} style={cardStyle}>
-          <div style={{ textAlign: 'left' }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{invite.team_name}</span>
-            <div style={{ fontSize: '12px', color: '#888' }}>보낸 사람: {invite.inviter_name}</div>
-          </div>
-          <div style={{ display: 'flex', gap: '5px' }}>
-            <button onClick={() => handleAction(invite.invite_id, 'ACCEPTED')} style={acceptBtnStyle}>수락</button>
-            <button onClick={() => handleAction(invite.invite_id, 'REJECTED')} style={rejectBtnStyle}>거절</button>
-          </div>
-        </div>
-      ))}
-    </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {invites.map((invite) => (
+            <div key={invite.invite_id} style={cardStyle}>
+              <div style={{ textAlign: 'left' }}>
+                <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{invite.team_name}</span>
+                <div style={{ fontSize: '12px', color: '#888' }}>보낸 사람: {invite.inviter_name}</div>
+              </div>
+              <div style={{ display: 'flex', gap: '5px' }}>
+                <button onClick={() => handleAction(invite.invite_id, 'ACCEPTED')} style={acceptBtnStyle}>수락</button>
+                <button onClick={() => handleAction(invite.invite_id, 'REJECTED')} style={rejectBtnStyle}>거절</button>
+              </div>
+            </div>
+        ))}
+      </div>
   );
 }
 

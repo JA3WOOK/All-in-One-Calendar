@@ -1,19 +1,34 @@
 const pool = require('../config/db');
 
 // 1. 일정 조회 (locations 테이블 LEFT JOIN으로 장소 정보 포함)
-const getAllSchedules = async () => {
+const getAllSchedules = async (user_id) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT
-        s.*,
-        l.location_name,
-        l.address,
-        l.latitude,
-        l.longitude
-      FROM schedules s
-             LEFT JOIN locations l ON s.location_id = l.location_id
-      WHERE s.is_deleted = 0
-    `);
+    let sql, params;
+    if (user_id) {
+      // 해당 유저의 개인 일정 + 유저가 속한 팀 일정
+      sql = `
+        SELECT s.*, l.location_name, l.address, l.latitude, l.longitude
+        FROM schedules s
+        LEFT JOIN locations l ON s.location_id = l.location_id
+        WHERE s.is_deleted = 0
+          AND (
+            s.user_id = ?
+            OR s.team_id IN (
+              SELECT team_id FROM team_members WHERE user_id = ? AND is_deleted = FALSE
+            )
+          )
+      `;
+      params = [user_id, user_id];
+    } else {
+      sql = `
+        SELECT s.*, l.location_name, l.address, l.latitude, l.longitude
+        FROM schedules s
+        LEFT JOIN locations l ON s.location_id = l.location_id
+        WHERE s.is_deleted = 0
+      `;
+      params = [];
+    }
+    const [rows] = await pool.query(sql, params);
     return rows;
   } catch (err) {
     throw err;

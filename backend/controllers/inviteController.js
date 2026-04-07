@@ -17,7 +17,7 @@ exports.sendInvite = async(req,res) => {
         if (!targetUser) {
             return res.status(404).json({ errors: ["가입하지 않은 사용자입니다."] });
         }
-        inviteData.inviter_id = 1; // test용,나중에 로그인 세션값으로 교체
+        inviteData.inviter_id = req.user.user_id;
         inviteData.invitee_id = targetUser.user_id;
 
         // 이미 초대된 id인지 구분
@@ -25,7 +25,7 @@ exports.sendInvite = async(req,res) => {
         if (existing.length > 0) {
             return res.status(400).json({ errors: ["이미 초대한 사용자입니다."] });
         }
-        
+
         const invite_result = await inviteModel.create(inviteData);
         res.status(200).json({
             message : "초대장 발송 완료",
@@ -38,7 +38,7 @@ exports.sendInvite = async(req,res) => {
         res.status(500).json({error : "발송실패"});
     }
 
-    
+
 }
 
 // 초대장 수락,거절
@@ -74,14 +74,15 @@ exports.inviteResponse = async(req,res) => {
 
 // 내가 보낸 초대 목록 조회
 exports.sendInviteList = async(req,res) => {
-    const {user_id,team_id} = req.query;
-    const results = await inviteModel.findSendInviteList(user_id,team_id);
+    const user_id = req.user.user_id;
+    const { team_id } = req.query;
+    const results = await inviteModel.findSendInviteList(user_id, team_id);
     res.json(results);
 }
 
 // 내가 받은 초대 목록 조회
 exports.receiveInviteList = async(req,res) => {
-    const {user_id} = req.query;
+    const user_id = req.user.user_id;
     const results = await inviteModel.findReceivedInviteList(user_id);
     res.json(results)
 }
@@ -94,6 +95,6 @@ function validateInvite(invite) {
     if (!invite.team_id) {
         errors.push("초대할 그룹을 선택하세요.");
     }
-    
+
     return errors;
 }

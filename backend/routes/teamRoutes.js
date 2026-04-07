@@ -1,6 +1,9 @@
 const express = require("express");
 const router  = express.Router();
 const teamController = require("../controllers/teamController");
+const authMiddleware = require("../middleware/authMiddleware");
+
+router.use(authMiddleware);
 
 router.post("/",                    teamController.createTeam);    // 그룹 생성
 router.get("/",                     teamController.getTeamList);   // 내 그룹 목록 조회

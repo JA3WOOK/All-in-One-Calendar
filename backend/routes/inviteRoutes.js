@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const inviteController = require('../controllers/inviteController');
+const authMiddleware = require('../middleware/authMiddleware');
+
+router.use(authMiddleware);
 
 
 router.post('/send',inviteController.sendInvite); // 초대장 발송

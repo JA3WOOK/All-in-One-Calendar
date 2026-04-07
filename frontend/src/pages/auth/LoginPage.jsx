@@ -49,74 +49,74 @@ export default function LoginPage() {
     } catch (err) {
       setIsError(true);
       setMessage(
-        err.response?.data?.message || "로그인 중 오류가 발생했습니다."
+          err.response?.data?.message || "로그인 중 오류가 발생했습니다."
       );
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-left">
-        <div className="calendar-preview"></div>
-      </div>
+      <div className="auth-page">
+        <div className="auth-left">
+          <div className="calendar-preview"></div>
+        </div>
 
-      <div className="auth-right">
-        <div className="auth-card">
-          <div className="auth-tab">
-            <div className="auth-tab-item active">로그인</div>
-            <div
-              className="auth-tab-item"
-              onClick={() => navigate("/signup")}
-            >
-              회원가입
-            </div>
-          </div>
-
-          <form className="auth-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="email">이메일</label>
-              <input
-                id="email"
-                className="form-input"
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                value={form.email}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="password">비밀번호</label>
-              <input
-                id="password"
-                className="form-input"
-                type="password"
-                name="password"
-                placeholder="비밀번호를 입력하세요"
-                value={form.password}
-                onChange={handleChange}
-              />
-              <div className="helper-link">비밀번호를 잊으셨나요?</div>
-            </div>
-
-            <button className="auth-btn" type="submit">
-              로그인
-            </button>
-
-            <div className="auth-bottom-text">
-              아직 계정이 없으신가요?{" "}
-              <span onClick={() => navigate("/signup")}>회원가입</span>
-            </div>
-
-            {message && (
-              <div className={isError ? "error-text" : "success-text"}>
-                {message}
+        <div className="auth-right">
+          <div className="auth-card">
+            <div className="auth-tab">
+              <div className="auth-tab-item active">로그인</div>
+              <div
+                  className="auth-tab-item"
+                  onClick={() => navigate("/signup")}
+              >
+                회원가입
               </div>
-            )}
-          </form>
+            </div>
+
+            <form className="auth-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="email">이메일</label>
+                <input
+                    id="email"
+                    className="form-input"
+                    type="email"
+                    name="email"
+                    placeholder="your@email.com"
+                    value={form.email}
+                    onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">비밀번호</label>
+                <input
+                    id="password"
+                    className="form-input"
+                    type="password"
+                    name="password"
+                    placeholder="비밀번호를 입력하세요"
+                    value={form.password}
+                    onChange={handleChange}
+                />
+                <div className="helper-link" onClick={() => navigate("/forgot-password")} style={{ cursor: "pointer" }}>비밀번호를 잊으셨나요?</div>
+              </div>
+
+              <button className="auth-btn" type="submit">
+                로그인
+              </button>
+
+              <div className="auth-bottom-text">
+                아직 계정이 없으신가요?{" "}
+                <span onClick={() => navigate("/signup")}>회원가입</span>
+              </div>
+
+              {message && (
+                  <div className={isError ? "error-text" : "success-text"}>
+                    {message}
+                  </div>
+              )}
+            </form>
+          </div>
         </div>
       </div>
-    </div>
   );
 }

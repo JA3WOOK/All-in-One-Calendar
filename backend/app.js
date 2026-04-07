@@ -2,55 +2,36 @@
 const express = require("express");
 const cors    = require("cors");
 const cron    = require("node-cron");
-const pool    = require("./config/db");
 require("dotenv").config();
 
 // ── 라우터 / 모델 import ──────────────────────────
 const todoModel      = require("./models/todoModel");
+const authRoutes     = require("./routes/authRoutes");     // 인증
 const todoRoutes     = require("./routes/todoRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
-const teamRoutes     = require("./routes/teamRoutes");
-const inviteRoutes   = require("./routes/inviteRoutes");
-const memberRouter   = require("./routes/memberRoutes");
-const authRoutes     = require("./routes/authRoutes");
-const userRoutes     = require("./routes/userRoutes");
+const teamRoutes     = require("./routes/teamRoutes");     // 그룹
+const inviteRoutes   = require("./routes/inviteRoutes");   // 초대
+const memberRouter   = require("./routes/memberRoutes");   // 멤버 관리
+const userRoutes     = require("./routes/userRoutes");     // 마이페이지
 
 // ── Express 앱 생성 ───────────────────────────────
 const app = express();
 
 // ── 미들웨어 ──────────────────────────────────────
 app.set("json spaces", 2);
-app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-}));
+app.use(cors());
 app.use(express.json());
 
 // ── 라우터 연결 ───────────────────────────────────
 app.get("/", (req, res) => res.send("서버 실행 중"));
 
+app.use("/api/auth",        authRoutes);
+app.use("/api/users",       userRoutes);
 app.use("/api/schedules",   scheduleRoutes);
 app.use("/api/teams",       teamRoutes);
 app.use("/api/todos",       todoRoutes);
 app.use("/api/invitations", inviteRoutes);
 app.use("/api/members",     memberRouter);
-app.use("/api/auth",        authRoutes);
-app.use("/users",           userRoutes);
-
-// ── 404 처리 ──────────────────────────────────────
-app.use((req, res) => {
-    res.status(404).json({
-        message: "요청한 경로를 찾을 수 없습니다.",
-    });
-});
-
-// ── 에러 처리 ─────────────────────────────────────
-app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(err.status || 500).json({
-        message: err.message || "서버 오류가 발생했습니다.",
-    });
-});
 
 // ── 서버 시작 ─────────────────────────────────────
 const PORT = process.env.PORT || 3001;
@@ -59,6 +40,8 @@ app.listen(PORT, () => {
 });
 
 // ── 자동 미루기 ───────────────────────────────────
+
+// 서버 시작 시 밀린 todo 즉시 처리
 async function runMissedCarryOver() {
     try {
         const count = await todoModel.carryOverTodos();
@@ -70,6 +53,7 @@ async function runMissedCarryOver() {
 
 runMissedCarryOver();
 
+// 매일 자정 한국 시간 기준으로 실행
 cron.schedule("0 0 * * *", async () => {
     try {
         const count = await todoModel.carryOverTodos();

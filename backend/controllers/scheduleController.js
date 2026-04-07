@@ -45,9 +45,12 @@ const fetchHolidays = async () => {
 
 const getSchedules = async (req, res) => {
   try {
+    // user_id: JWT 미적용 시 query에서 받음, 적용 시 req.user에서 받음
+    const user_id = req.user?.user_id || null;
+
     // 1. DB 일정과 구글 공휴일을 동시에(Parallel) 기다립니다. (속도 향상)
     const [rows, holidays] = await Promise.all([
-      scheduleModel.getAllSchedules(),
+      scheduleModel.getAllSchedules(user_id),
       fetchHolidays()
     ]);
 
@@ -70,28 +73,26 @@ const createSchedule = async (req, res) => {
     await connection.beginTransaction();
 
     // 1. 데이터 구조 분해
-    const { 
-      title, 
-      description, 
-      start_at, 
-      end_at, 
-      category,     // self_dev, work, hobby, exercise, etc
-      priority,     // LOW, MEDIUM, HIGH
-      team_id, 
-      location,     // { name, address, lat, lng }
-      user_id 
+    const {
+      title,
+      description,
+      start_at,
+      end_at,
+      category,
+      priority,
+      team_id,
+      location,
     } = req.body;
 
-    // 인증된 사용자 ID가 없으면 넘겨받은 user_id나 기본값 1 사용
-    const current_user = (req.user && req.user.id) || user_id || 1;
+    const current_user = req.user.user_id;
 
     let location_id = null;
 
     // 2. 장소 정보 저장 (locations 테이블)
     if (location && location.address) {
       const [locResult] = await connection.query(
-        "INSERT INTO locations (location_name, address, latitude, longitude) VALUES (?, ?, ?, ?)",
-        [location.name || title, location.address, location.lat || null, location.lng || null]
+          "INSERT INTO locations (location_name, address, latitude, longitude) VALUES (?, ?, ?, ?)",
+          [location.name || title, location.address, location.lat || null, location.lng || null]
       );
       location_id = locResult.insertId;
     }
@@ -103,21 +104,21 @@ const createSchedule = async (req, res) => {
 
     // 4. 일정 생성 (schedules 테이블)
     const [schResult] = await connection.query(
-      `INSERT INTO schedules 
-      (title, description, start_at, end_at, category, priority, user_id, team_id, location_id, created_by) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        title,
-        description || "",
-        start_at,
-        end_at,
-        category || "etc",      // 명세서 ENUM 소문자 기준
-        priority || "MEDIUM", 
-        final_user_id,
-        final_team_id,
-        location_id,
-        current_user            // created_by 필수값
-      ]
+        `INSERT INTO schedules
+         (title, description, start_at, end_at, category, priority, user_id, team_id, location_id, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          title,
+          description || "",
+          start_at,
+          end_at,
+          category || "etc",      // 명세서 ENUM 소문자 기준
+          priority || "MEDIUM",
+          final_user_id,
+          final_team_id,
+          location_id,
+          current_user            // created_by 필수값
+        ]
     );
 
     await connection.commit();
@@ -135,7 +136,7 @@ const createSchedule = async (req, res) => {
 //일정 수정
 const editSchedule = async (req, res) => {
   const { id } = req.params;
-  const scheduleData = req.body;
+  const scheduleData = { ...req.body, updated_by: req.user.user_id };
 
   try {
     const result = await scheduleModel.updateSchedule(id, scheduleData);
@@ -155,7 +156,7 @@ const editSchedule = async (req, res) => {
 const removeSchedule = async (req, res) => {
   const { id } = req.params;
   // user_id가 꼭 필요한 로직이 아니라면 이 줄을 지우거나, body가 없을 때를 대비해 기본값을 줍니다.
-  const user_id = req.body?.user_id || 1;
+  const user_id = req.user.user_id;
 
   try {
     const result = await scheduleModel.deleteSchedule(id, user_id);
@@ -172,5 +173,3 @@ const removeSchedule = async (req, res) => {
 };
 
 module.exports = { getSchedules, createSchedule, editSchedule, removeSchedule };
-
-
