@@ -7,31 +7,13 @@ import MemberManageModal from "./components/Member/MemberManageModal"; // 그룹
 function App() {
   const location = useLocation()
   const navigate = useNavigate();
-  const background = location.state && location.state.backgroundLocation;
+  const background = location.state && location.state.backgroundLocation; // 배경 유지하며 모달 올라옴
 
   return (
     <div className="App">
-      {/* --- 1층: 메인 페이지 (배경) --- */}
       <Routes location={background || location}>
         <Route path="/" element={
-          <div style={{ textAlign: 'center', padding: '50px' }}>
-            <h1>메인 캘린더 페이지</h1>
-            <p>달력 공간</p>
-            
-            {/* 테스트용 버튼: 클릭 시 주소 이동 + 배경 정보 전달 */}
-            <button 
-              onClick={() => navigate('/groups/create', { state: { backgroundLocation: location } })}
-              style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' , backgroundColor: '#b5b7ba', color: 'white', border: 'none', borderRadius: '4px' }}
-            >
-              그룹 생성
-            </button>
-
-            <button 
-          onClick={() => navigate('/admin/groups',{ state: { backgroundLocation: location } })} 
-          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', backgroundColor: '#b5b7ba', color: 'white', border: 'none', borderRadius: '4px' }}
-        >
-          그룹 관리
-        </button>
+          <div style={{ textAlign: 'center', padding: '50px' }}>                        
       </div>
 
         } />
