@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<!-- saved from url=(0028)http://localhost:5173/mypage -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="./frontend_files/client"></script>
+
+    
+    <link rel="icon" type="image/svg+xml" href="http://localhost:5173/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>frontend</title>
+  <style type="text/css" data-vite-dev-id="/Users/soobin/All-in-One-Calendar/frontend/src/pages/user/MyPage.css">.mypage-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f6fb;
+}
+
+.mypage-card {
+  width: 420px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.profile-section {
+  margin-bottom: 30px;
+}
+
+.profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+}
+
+.profile-name {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.profile-email {
+  color: #888;
+  font-size: 14px;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.button-group button {
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  background: #e9edf5;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-group button:hover {
+  background: #dfe6f3;
+}
+
+.logout-btn {
+  background: #5a8cff !important;
+  color: white;
+}
+
+.delete-account {
+  margin-top: 24px;
+  color: red;
+  font-size: 14px;
+  cursor: pointer;
+}</style><style type="text/css" data-vite-dev-id="/Users/soobin/All-in-One-Calendar/frontend/src/pages/user/EditProfilePage.css">.edit-profile-page {
+  min-height: 100vh;
+  background: #f5f6fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.edit-profile-card {
+  width: 420px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.edit-profile-back-btn {
+  background: none;
+  border: none;
+  color: #888;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.edit-profile-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.edit-profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.edit-profile-image-btn {
+  display: inline-block;
+  margin-top: 10px;
+  background: #5a8cff;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.edit-profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.edit-profile-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-profile-input-group label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.edit-profile-input-group input {
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 0 12px;
+  font-size: 15px;
+}
+
+.edit-profile-save-btn {
+  width: 100%;
+  height: 52px;
+  background: #5a8cff;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  margin-top: 20px;
+}</style><style type="text/css" data-vite-dev-id="/Users/soobin/All-in-One-Calendar/frontend/src/pages/user/ChangePasswordPage.css">.change-password-page {
+  min-height: 100vh;
+  background: #f5f6fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.change-password-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 32px 28px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.back-btn {
+  border: none;
+  background: none;
+  color: #7d7d7d;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.input-wrap {
+  position: relative;
+}
+
+.input-wrap input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid #d9dce3;
+  border-radius: 14px;
+  padding: 0 45px 0 14px;
+  font-size: 16px;
+  outline: none;
+}
+
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.submit-btn {
+  margin-top: 8px;
+  height: 56px;
+  border: none;
+  border-radius: 16px;
+  background: #5a8cff;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(90, 140, 255, 0.22);
+}</style><style type="text/css" data-vite-dev-id="/Users/soobin/All-in-One-Calendar/frontend/src/components/Modal.css">.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 20, 0.38);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 20px;
+  background: #1f1f24;
+  border-radius: 24px;
+  padding: 28px 24px 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.modal-title {
+  margin: 0 0 12px;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.modal-text {
+  margin: 0 0 24px;
+  color: #f3f3f3;
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.modal-btn {
+  min-width: 120px;
+  height: 46px;
+  border: none;
+  border-radius: 999px;
+  background: #e5a9d3;
+  color: #3d1632;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}</style><style type="text/css" data-vite-dev-id="/Users/soobin/All-in-One-Calendar/frontend/src/pages/user/ForgotPasswordPage.css">.forgot-container {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #ffffff;
+}
+
+/* 왼쪽 브랜딩 영역 */
+.forgot-left {
+  background: #f5f6fb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 48px;
+  text-align: center;
+}
+
+.forgot-brand-title {
+  font-size: 64px;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1.08;
+  letter-spacing: -1.6px;
+  margin-bottom: 26px;
+}
+
+.forgot-brand-subtitle {
+  font-size: 30px;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.5;
+  letter-spacing: -0.7px;
+  margin-bottom: 18px;
+}
+
+.forgot-brand-subtitle span {
+  color: #5a8cff;
+}
+
+.forgot-brand-description {
+  font-size: 17px;
+  color: #7d7d7d;
+  line-height: 1.65;
+  letter-spacing: -0.25px;
+  margin-bottom: 26px;
+}
+
+.forgot-brand-image-card {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.forgot-brand-preview-image {
+  width: 100%;
+  max-width: 620px;
+  object-fit: contain;
+  display: block;
+}
+
+/* 오른쪽 입력 영역 */
+.forgot-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 72px 88px;
+  background: #ffffff;
+}
+
+.forgot-back-button {
+  border: none;
+  background: none;
+  color: #9a9a9a;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 24px;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.forgot-back-button:hover {
+  color: #6f6f6f;
+}
+
+.forgot-security-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: #eaf1ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.forgot-security-icon-box img {
+  width: 27px;
+  height: 27px;
+  object-fit: contain;
+}
+
+.forgot-page-title {
+  font-size: 34px;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1.22;
+  letter-spacing: -1px;
+  margin: 0 0 14px;
+}
+
+.forgot-page-description {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #9d9d9d;
+  letter-spacing: -0.45px;
+  word-spacing: -1px;
+  margin: 0 0 34px;
+}
+
+.forgot-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.forgot-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.forgot-input-group label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222222;
+  letter-spacing: -0.2px;
+}
+
+.forgot-input-wrap {
+  position: relative;
+}
+
+.forgot-input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9d9d9d;
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.forgot-input-wrap input {
+  width: 100%;
+  height: 58px;
+  border: 1px solid #dddddd;
+  border-radius: 16px;
+  padding: 0 16px 0 48px;
+  font-size: 16px;
+  background: #fafafa;
+  color: #111111;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.forgot-input-wrap input::placeholder {
+  color: #b5b5b5;
+}
+
+.forgot-input-wrap input:focus {
+  border-color: #8db2ff;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(90, 140, 255, 0.08);
+}
+
+.forgot-input-group small {
+  color: #acacac;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: -0.15px;
+}
+
+.forgot-primary-button {
+  width: 100%;
+  height: 60px;
+  border: none;
+  border-radius: 18px;
+  background: #5a8cff;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.25px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(90, 140, 255, 0.22);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.forgot-primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(90, 140, 255, 0.26);
+}
+
+.forgot-primary-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.forgot-bottom-link-text {
+  margin-top: 26px;
+  text-align: center;
+  color: #909090;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: -0.15px;
+}
+
+.forgot-bottom-link-text span {
+  color: #5a8cff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.forgot-bottom-link-text span:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1280px) {
+  .forgot-brand-title {
+    font-size: 56px;
+  }
+
+  .forgot-brand-subtitle {
+    font-size: 27px;
+  }
+
+  .forgot-brand-image-card {
+    max-width: 600px;
+  }
+
+  .forgot-brand-preview-image {
+    max-width: 540px;
+  }
+
+  .forgot-right {
+    padding: 64px 56px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .forgot-container {
+    grid-template-columns: 1fr;
+  }
+
+  .forgot-left {
+    display: none;
+  }
+
+  .forgot-right {
+    padding: 48px 24px;
+    max-width: 560px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .forgot-page-title {
+    font-size: 30px;
+  }
+
+  .forgot-page-description {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 640px) {
+  .forgot-right {
+    padding: 36px 20px;
+  }
+
+  .forgot-page-title {
+    font-size: 28px;
+  }
+
+  .forgot-input-wrap input {
+    height: 54px;
+    font-size: 15px;
+  }
+
+  .forgot-primary-button {
+    height: 56px;
+    font-size: 17px;
+  }
+  .forgot-success-box {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.forgot-success-email-box {
+  width: 100%;
+  min-height: 58px;
+  border: 1px solid #dddddd;
+  border-radius: 16px;
+  background: #fafafa;
+  color: #666666;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  word-break: break-all;
+}
+}</style><style type="text/css" data-vite-dev-id="/Users/soobin/All-in-One-Calendar/frontend/src/pages/user/ResetPasswordPage.css">.reset-container {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 0.9fr 1fr;
+  background: #ffffff;
+}
+
+/* 왼쪽 */
+.reset-left {
+  background: #f5f6fb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.reset-brand-title {
+  font-size: 60px;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1.08;
+  letter-spacing: -1.4px;
+  margin-bottom: 24px;
+}
+
+.reset-brand-subtitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.5;
+  letter-spacing: -0.6px;
+  margin-bottom: 16px;
+}
+
+.reset-brand-subtitle span {
+  color: #5a8cff;
+}
+
+.reset-brand-description {
+  font-size: 16px;
+  color: #7d7d7d;
+  line-height: 1.65;
+  letter-spacing: -0.2px;
+  margin-bottom: 26px;
+}
+
+.reset-brand-image-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.reset-brand-preview-image {
+  width: 100%;
+  max-width: 500px;
+  object-fit: contain;
+  display: block;
+}
+
+/* 오른쪽 */
+.reset-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 100px;
+  background: #ffffff;
+}
+
+.reset-back-button {
+  border: none;
+  background: none;
+  color: #9a9a9a;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 24px;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.reset-back-button:hover {
+  color: #6f6f6f;
+}
+
+.reset-security-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: #eaf1ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.reset-security-icon-box img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+}
+
+.reset-page-title {
+  font-size: 47px;
+  font-weight: 800;
+  color: #111111;
+  line-height: 1.22;
+  letter-spacing: -1.2px;
+  margin: 0 0 16px;
+}
+
+.reset-page-description {
+  font-size: 20px;
+  line-height: 1.8;
+  color: #9d9d9d;
+  letter-spacing: -0.35px;
+  word-spacing: -0.5px;
+  margin: 0 0 38px;
+}
+
+.reset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.reset-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reset-input-group label {
+  font-size: 23px;
+  font-weight: 700;
+  color: #222222;
+  letter-spacing: -0.2px;
+}
+
+.reset-input-wrap {
+  position: relative;
+}
+
+.reset-input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9d9d9d;
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.reset-input-wrap input {
+  width: 100%;
+  height: 68px;
+  border: 1px solid #dddddd;
+  border-radius: 16px;
+  padding: 0 48px 0 46px;
+  font-size: 21px;
+  background: #fafafa;
+  color: #111111;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.reset-input-wrap input::placeholder {
+  color: #b5b5b5;
+}
+
+.reset-input-wrap input:focus {
+  border-color: #8db2ff;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(90, 140, 255, 0.08);
+}
+
+.reset-eye-button {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #8b8b8b;
+  padding: 0;
+}
+
+.reset-primary-button {
+  width: 100%;
+  height: 66px;
+  border: none;
+  border-radius: 18px;
+  background: #5a8cff;
+  color: #ffffff;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.25px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(90, 140, 255, 0.22);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.reset-primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(90, 140, 255, 0.26);
+}
+
+.reset-primary-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 1280px) {
+  .reset-brand-title {
+    font-size: 54px;
+  }
+
+  .reset-brand-subtitle {
+    font-size: 25px;
+  }
+
+  .reset-right {
+    padding: 64px 56px;
+  }
+
+  .reset-brand-preview-image {
+    max-width: 440px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .reset-container {
+    grid-template-columns: 1fr;
+  }
+
+  .reset-left {
+    display: none;
+  }
+
+  .reset-right {
+    padding: 48px 24px;
+    max-width: 560px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .reset-page-title {
+    font-size: 30px;
+  }
+
+  .reset-page-description {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 640px) {
+  .reset-right {
+    padding: 36px 20px;
+  }
+
+  .reset-page-title {
+    font-size: 28px;
+  }
+
+  .reset-input-wrap input {
+    height: 54px;
+    font-size: 15px;
+  }
+
+  .reset-primary-button {
+    height: 56px;
+    font-size: 17px;
+  }
+}</style><style type="text/css" data-vite-dev-id="/Users/soobin/All-in-One-Calendar/frontend/src/index.css">html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f6fa;
+  color: #111111;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}</style></head>
+  <body>
+    <div id="root"><div class="mypage-container"><div class="mypage-card"><div class="profile-section"><img alt="profile" class="profile-image" src="./frontend_files/default-profile.png"><h2 class="profile-name">이름 없음</h2><p class="profile-email">이메일 없음</p></div><div class="button-group"><button>정보 수정</button><button>비밀번호 변경</button><button class="logout-btn">로그아웃</button></div><p class="delete-account">계정 삭제</p></div></div></div>
+    <script type="module" src="./frontend_files/main.jsx"></script>
+  
+
+</body></html>
