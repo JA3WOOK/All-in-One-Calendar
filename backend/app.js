@@ -2,6 +2,7 @@
 const express = require("express");
 const cors    = require("cors");
 const cron    = require("node-cron");
+const pool    = require("./config/db");
 require("dotenv").config();
 
 // ── 라우터 / 모델 import ──────────────────────────
@@ -9,6 +10,8 @@ const todoModel      = require("./models/todoModel");
 const todoRoutes     = require("./routes/todoRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const teamRoutes     = require("./routes/teamRoutes");
+const inviteRoutes   = require("./routes/inviteRoutes");
+const memberRouter   = require("./routes/memberRoutes");
 
 // ── Express 앱 생성 ───────────────────────────────
 const app = express();
@@ -21,10 +24,11 @@ app.use(express.json());
 // ── 라우터 연결 ───────────────────────────────────
 app.get("/", (req, res) => res.send("서버 실행 중"));
 
-app.use("/api/schedules", scheduleRoutes);
-app.use("/api/teams",     teamRoutes);
-
-app.use("/api/todos",     todoRoutes);
+app.use("/api/schedules",   scheduleRoutes);
+app.use("/api/teams",       teamRoutes);
+app.use("/api/todos",       todoRoutes);
+app.use("/api/invitations", inviteRoutes);
+app.use("/api/members",     memberRouter);
 
 // ── 서버 시작 ─────────────────────────────────────
 const PORT = process.env.PORT || 3001;
@@ -33,8 +37,6 @@ app.listen(PORT, () => {
 });
 
 // ── 자동 미루기 ───────────────────────────────────
-
-// 서버 시작 시 밀린 todo 즉시 처리
 async function runMissedCarryOver() {
     try {
         const count = await todoModel.carryOverTodos();
@@ -46,7 +48,6 @@ async function runMissedCarryOver() {
 
 runMissedCarryOver();
 
-// 매일 자정 한국 시간 기준으로 실행
 cron.schedule("0 0 * * *", async () => {
     try {
         const count = await todoModel.carryOverTodos();
