@@ -21,6 +21,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use("/uploads", express.static("uploads"));
 
 app.use((req, res) => {
   res.status(404).json({

@@ -21,7 +21,6 @@ export default function SignupPage() {
   const [selectedProfile, setSelectedProfile] = useState("👤");
   const [uploadedProfiles, setUploadedProfiles] = useState([]);
 
-  // 🔥 추가된 state
   const [imageSrc, setImageSrc] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
 
@@ -36,7 +35,6 @@ export default function SignupPage() {
     }));
   };
 
- 
   const handleProfileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -53,30 +51,33 @@ export default function SignupPage() {
 
     const preview = URL.createObjectURL(file);
 
-  
     setImageSrc(preview);
     setShowCropModal(true);
+    setUploadError("");
 
     e.target.value = "";
   };
 
-
-  const handleCropComplete = (croppedImage) => {
+  const handleCropComplete = ({ file, preview }) => {
     const newImage = {
-      file: null,
-      preview: croppedImage,
+      file,
+      preview,
     };
 
     setUploadedProfiles((prev) => [...prev, newImage]);
-    setSelectedProfile(croppedImage);
+    setSelectedProfile(preview);
 
     setShowCropModal(false);
     setImageSrc(null);
   };
 
-  
   const handleRemoveUploadedProfile = (previewToRemove) => {
     setUploadedProfiles((prev) => {
+      const target = prev.find((item) => item.preview === previewToRemove);
+      if (target?.preview?.startsWith?.("blob:")) {
+        URL.revokeObjectURL(target.preview);
+      }
+
       const updated = prev.filter((item) => item.preview !== previewToRemove);
 
       if (selectedProfile === previewToRemove) {
@@ -138,6 +139,12 @@ export default function SignupPage() {
       setMessage(data.message || "회원가입 성공");
       setIsError(false);
       setUploadError("");
+
+      uploadedProfiles.forEach((item) => {
+        if (item.preview?.startsWith?.("blob:")) {
+          URL.revokeObjectURL(item.preview);
+        }
+      });
 
       setForm({
         name: "",
@@ -237,8 +244,7 @@ export default function SignupPage() {
                         ×
                       </button>
                     </div>
-                  ) : profile === null ? null : profile
-                  }
+                  ) : profile === null ? null : profile}
                 </div>
               );
             })}
@@ -276,7 +282,7 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
-{/* */}
+
       <div className="auth-right">
         <div className="auth-card">
           <div className="auth-tab">
@@ -348,11 +354,13 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* 크롭 모달 */}
       {showCropModal && (
         <ProfileImageCropModal
           imageSrc={imageSrc}
-          onClose={() => setShowCropModal(false)}
+          onClose={() => {
+            setShowCropModal(false);
+            setImageSrc(null);
+          }}
           onComplete={handleCropComplete}
         />
       )}
