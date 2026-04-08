@@ -116,7 +116,14 @@ exports.signup = async (name, email, password, profileImage, profileEmoji) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const result = await userModel.createUser(name, email, hashedPassword);
+
+  const finalProfileImage = profileImage || profileEmoji;
+  const result = await userModel.createUser(
+    name, 
+    email,
+    hashedPassword,
+    finalProfileImage
+  );
 
   return {
     message: "회원가입 성공",

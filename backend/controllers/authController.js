@@ -26,7 +26,7 @@ exports.signup = async (req, res, next) => {
     const email = req.body.email ? String(req.body.email).trim() : "";
     const password = req.body.password ? String(req.body.password).trim() : "";
 
-    const profileImage = req.file ? req.file.filename : null;
+    const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
     const profileEmoji = req.body.profileEmoji
       ? String(req.body.profileEmoji).trim()
       : null;
