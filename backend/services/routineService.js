@@ -1,4 +1,4 @@
-import db from '../config/db.js';
+const db = require('../config/db.js');
 
 // [UI 매핑] CalendarStatsDashboard.tsx - 우측 상단 아코디언 (전체/개인/팀)
 const buildCondition = (filterType, userId, teamId) => {
@@ -12,7 +12,7 @@ const buildCondition = (filterType, userId, teamId) => {
  * - 우측 중앙 '루틴 달성 현황' 박스: 개별 스케줄(루틴)별 목표/달성 일수 표시
  * * [수정 사항] GROUP BY category -> GROUP BY title (개별 스케줄 제목 기준 집계)
  */
-export const getRoutineStats = async (userId, filterType, teamId, start, end) => {
+const getRoutineStats = async (userId, filterType, teamId, start, end) => {
   const { clause, params } = buildCondition(filterType, userId, teamId);
   const sqlParams = [...params, start, end];
 
@@ -37,3 +37,4 @@ export const getRoutineStats = async (userId, filterType, teamId, start, end) =>
     achievedDays: Number(r.achievedDays)
   }));
 };
+module.exports = { getRoutineStats };

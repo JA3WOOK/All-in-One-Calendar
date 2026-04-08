@@ -1,7 +1,7 @@
-import db from '../config/db.js';
-import { mapCategoryToKorean } from '../utils/categoryMapper.js';
+const db = require('../config/db.js');
+const { mapCategoryToKorean } = require('../utils/categoryMapper.js');
 
-export const getTodoScheduleData = async (userId, teamId, start, end) => {
+ const getTodoScheduleData = async (userId, teamId, start, end) => {
   const sql = `
     SELECT category AS raw_category, COUNT(*) AS total,
       SUM(CASE WHEN is_done = 1 AND is_carried_over = 0 THEN 1 ELSE 0 END) AS onTime,
@@ -24,3 +24,4 @@ export const getTodoScheduleData = async (userId, teamId, start, end) => {
     value: totalSum === 0 ? 0 : Math.round((Number(r.total) * 100) / totalSum)
   }));
 };
+module.exports = { getTodoScheduleData };

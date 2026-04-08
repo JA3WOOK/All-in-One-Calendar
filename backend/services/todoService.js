@@ -1,5 +1,5 @@
-import db from '../config/db.js';
-import { mapCategoryToKorean } from '../utils/categoryMapper.js';
+const db = require('../config/db.js');
+const { mapCategoryToKorean } = require('../utils/categoryMapper.js');
 
 /**
  * [UI 매핑] CalendarStatsDashboard.tsx - 우측 상단 아코디언 (전체/개인/팀)
@@ -27,7 +27,7 @@ const buildCondition = (filterType, userId, teamId) => {
  * 2. <table>: 하단 '일정 달성률 요약' 테이블 (전체, 미달성, 달성률)
  * * [검사 로직] repeat_group_id 기준 최신 이력 조회 적용
  */
-export const getTodoStats = async (userId, filterType, teamId, start, end) => {
+const getTodoStats = async (userId, filterType, teamId, start, end) => {
   const { clause, params } = buildCondition(filterType, userId, teamId);
   const sqlParams = [...params, start, end];
 
@@ -61,7 +61,7 @@ export const getTodoStats = async (userId, filterType, teamId, start, end) => {
  * 1. <ScheduleDetailModal>: '달성한/이월된 일정 상세 보기' 버튼 클릭 시 리스트업
  * 2. <CalendarModal>: '전체 캘린더 보기' 시 날짜별로 박스 렌더링
  */
-export const getDetailedTodos = async (userId, filterType, teamId, start, end) => {
+const getDetailedTodos = async (userId, filterType, teamId, start, end) => {
   const { clause, params } = buildCondition(filterType, userId, teamId);
   const sqlParams = [...params, start, end];
 
@@ -96,3 +96,4 @@ export const getDetailedTodos = async (userId, filterType, teamId, start, end) =
 
   return { completed, carriedOver };
 };
+module.exports = { getTodoStats, getDetailedTodos };

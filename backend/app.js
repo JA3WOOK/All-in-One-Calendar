@@ -1,38 +1,82 @@
-// app.js 에 연결 확인 코드 추가 
-const express = require("express"); 
-const cors = require("cors"); 
-const pool = require("./config/db"); 
+// ── 모듈 import ───────────────────────────────────
+const express = require("express");
+const cors    = require("cors");
+const cron    = require("node-cron");
+const pool    = require("./config/db");
+require("dotenv").config();
 
-const empRoutes = require("./routes/empRoutes");
+// ── 라우터 / 모델 import ──────────────────────────
+const todoModel      = require("./models/todoModel");
+const todoRoutes     = require("./routes/todoRoutes");
+const scheduleRoutes = require("./routes/scheduleRoutes");
+const teamRoutes     = require("./routes/teamRoutes");
+const inviteRoutes   = require("./routes/inviteRoutes");
+const memberRouter   = require("./routes/memberRoutes");
+const authRoutes     = require("./routes/authRoutes");
+const userRoutes     = require("./routes/userRoutes");
 
-const app = express(); 
+// ── Express 앱 생성 ───────────────────────────────
+const app = express();
 
-app.use(cors()); 
-app.use(express.json()); 
+// ── 미들웨어 ──────────────────────────────────────
+app.set("json spaces", 2);
+app.use(cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+}));
+app.use(express.json());
 
-// Promise 객체 : js에서 비동기작업 (완료되지 않고 걸리는 시간) 중에 [실행대기, 성공, 실패]를 리턴하는 객체
-// ex) 카페 진동벨 -> 비동기 대기
-// 컴포넌트 앞에 async를 선언하면 {} 안에 기다려라 await는 코드가 존재한다를 알려주는 것
+// ── 라우터 연결 ───────────────────────────────────
+app.get("/", (req, res) => res.send("서버 실행 중"));
 
-async function testDB() { 
-    try { 
-        // await DB의 response를 즉 응답이 올때 까지 잠시 '기다림'
-        const [rows] = await pool.query("SELECT 1"); 
-        console.log("DB 연결 성공!"); 
+app.use("/api/schedules",   scheduleRoutes);
+app.use("/api/teams",       teamRoutes);
+app.use("/api/todos",       todoRoutes);
+app.use("/api/invitations", inviteRoutes);
+app.use("/api/members",     memberRouter);
+app.use("/api/auth",        authRoutes);
+app.use("/users",           userRoutes);
 
-    } catch (err) { 
-        console.error("DB 연결 실패:", err); 
-    } 
-} 
-testDB(); 
+app.use("/api/stats",       require("./routes/statsRoutes"));// 통계 추가
 
-app.get("/", (req, res) => { 
-    res.send("Promise 서버 실행 중 (Promise 버전)" ); 
-}); 
+// ── 404 처리 ──────────────────────────────────────
+app.use((req, res) => {
+    res.status(404).json({
+        message: "요청한 경로를 찾을 수 없습니다.",
+    });
+});
 
-app.use("/api", empRoutes);
+// ── 에러 처리 ─────────────────────────────────────
+app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(err.status || 500).json({
+        message: err.message || "서버 오류가 발생했습니다.",
+    });
+});
 
-const PORT = 3001; 
-app.listen(PORT, () => { 
-console.log(`서버 실행: http://localhost:${PORT}`); 
-}); 
+// ── 서버 시작 ─────────────────────────────────────
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+    console.log(`서버 실행: http://localhost:${PORT}`);
+});
+
+// ── 자동 미루기 ───────────────────────────────────
+async function runMissedCarryOver() {
+    try {
+        const count = await todoModel.carryOverTodos();
+        if (count > 0) console.log(`[자동 미루기] 서버 시작 시 ${count}개 처리됨`);
+    } catch (err) {
+        console.error("[자동 미루기 오류]", err);
+    }
+}
+
+runMissedCarryOver();
+
+cron.schedule("0 0 * * *", async () => {
+    try {
+        const count = await todoModel.carryOverTodos();
+        console.log(`[자동 미루기] ${count}개 todo가 +1일 처리됨`);
+    } catch (err) {
+        console.error("[자동 미루기 오류]", err);
+    }
+}, { timezone: "Asia/Seoul" });

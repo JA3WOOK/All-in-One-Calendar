@@ -1,6 +1,6 @@
-import express from 'express';
-import { getTodoScheduleData } from '../services/statsQuery.js';
-import { getRoutineData } from '../services/routineQuery.js';
+const express = require('express');
+const { getTodoScheduleData } = require('../services/statsQuery.js');
+const { getRoutineData } = require('../services/routineQuery.js');
 
 const router = express.Router();
 
@@ -20,4 +20,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

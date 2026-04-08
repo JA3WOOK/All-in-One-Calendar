@@ -1,9 +1,12 @@
-export const mapCategoryToKorean = (dbCategory) => {
-  const map = {
-    WORK: '업무',
-    EXERCISE: '운동',
-    SELF_DEV: '공부',
-    HOBBY: '개인'
+const mapCategoryToKorean = (category) => {
+  const mapper = {
+    'WORK': '업무',
+    'EXERCISE': '운동',
+    'SELF_DEV': '공부',
+    'HOBBY': '개인',
+    'ETC': '기타'
   };
-  return map[dbCategory] || '기타';
+  return mapper[category] || '기타';
 };
+
+module.exports = { mapCategoryToKorean };
