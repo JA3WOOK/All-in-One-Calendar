@@ -1,5 +1,22 @@
 const inviteModel = require('../models/inviteModel');
 
+// 초대장 발송 시 이메일 자동완성
+exports.searchUsers = async (req, res) => {
+    try {
+        const { term } = req.query;
+
+        if (!term || term.length < 2) {
+            return res.status(200).json([]);
+        }
+
+        const users = await inviteModel.searchUsersForInvite(term);
+        res.status(200).json(users);
+    } catch (err) {
+        console.error("유저 검색 실패", err);
+        res.status(500).json({ error: "검색 중 오류 발생" });
+    }
+};
+
 
 // 초대장 발송
 exports.sendInvite = async(req,res) => {
@@ -10,18 +27,28 @@ exports.sendInvite = async(req,res) => {
 
     try {
         const inviteData = req.body;
-
         // 입력받은 이메일로 유저 정보 찾기
         const targetUser = await inviteModel.getUserByEmail(inviteData.invitee_email);
+
         // 가입 안한 user 일경우
         if (!targetUser) {
             return res.status(404).json({ errors: ["가입하지 않은 사용자입니다."] });
         }
-        inviteData.inviter_id = req.user.user_id;
-        inviteData.invitee_id = targetUser.user_id;
+
+        const invitee_id = targetUser.user_id; 
+        const team_id = inviteData.team_id;
+
+        inviteData.invitee_id = invitee_id;
+        inviteData.inviter_id = req.user.user_id; // 내 ID 추가
+
+        // 이미 팀 멤버인지 확인
+        const isMember = await inviteModel.checkIfMember(team_id, invitee_id);
+        if (isMember) {
+            return res.status(400).json({ errors: ["이미 그룹에 가입된 멤버입니다."] });
+        }
 
         // 이미 초대된 id인지 구분
-        const existing = await inviteModel.findByTarget(inviteData.team_id, inviteData.invitee_id);
+        const existing = await inviteModel.findByTarget(team_id,invitee_id);
         if (existing.length > 0) {
             return res.status(400).json({ errors: ["이미 초대한 사용자입니다."] });
         }
@@ -40,6 +67,35 @@ exports.sendInvite = async(req,res) => {
 
 
 }
+
+// 초대장 취소
+exports.cancelInvite = async (req, res) => {
+    try {
+        const { invite_id } = req.body; 
+        const inviter_id = req.user.user_id; 
+
+        if (!invite_id) {
+            return res.status(400).json({ error: "취소할 초대 ID가 필요합니다." });
+        }
+
+        const result = await inviteModel.cancelInvite(invite_id, inviter_id);
+
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ 
+                error: "초대를 취소할 수 없습니다. 이미 수락되었거나 본인이 보낸 초대가 아닙니다." 
+            });
+        }
+
+        res.status(200).json({
+            message: "초대가 정상적으로 취소되었습니다.",
+            res: "오류없음"
+        });
+
+    } catch (err) {
+        console.error("초대 취소 중 오류 발생", err);
+        res.status(500).json({ error: "초대 취소 중 오류 발생" });
+    }
+};
 
 // 초대장 수락,거절
 exports.inviteResponse = async(req,res) => {

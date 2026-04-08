@@ -15,6 +15,34 @@ exports.create = async (inviteData) => {
         return result;
 }
 
+// 초대장 발송 시 이메일 자동완성
+exports.searchUsersForInvite = async (term) => {
+    try {
+        const sql = `
+            select user_id,name,email,profile_image 
+            from users 
+            where (name like ? OR email like ?)
+            limit 5
+        `;
+        const wildcardTerm = `%${term}%`;
+        const [rows] = await pool.query(sql, [wildcardTerm, wildcardTerm]);
+        return rows;
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+// 초대장 취소 (Hard Delete)
+exports.cancelInvite = async (invite_id, inviter_id) => {
+    const sql = `
+        delete from invitations 
+        where invite_id = ? and inviter_id = ? and status = 'PENDING'
+    `;
+    const [result] = await pool.query(sql, [invite_id, inviter_id]);
+    return result; 
+};
+
 // 입력된 이메일로 user_id 찾기
 exports.getUserByEmail = async (invitee_email) => {
     const sql = `
@@ -26,10 +54,19 @@ exports.getUserByEmail = async (invitee_email) => {
     return rows[0];
 }
 
+// 이미 가입된 멤버인지 확인
+exports.checkIfMember = async (team_id, user_id) => {
+    const [rows] = await pool.query(
+        "select * from team_members where team_id = ? and user_id = ?",
+        [team_id, user_id]
+    );
+    return rows.length > 0;
+};
+
 // 초대장 발송 여부 , 이미 초대된 id인지 구분
 exports.findByTarget = async(team_id,invitee_id) => {
     const sql = `
-        select * FROM invitations 
+        select * from invitations 
         where team_id=? and invitee_id=? and status = 'PENDING'
     `;
     const [rows] = await pool.query(sql, [team_id, invitee_id]);
@@ -88,7 +125,7 @@ exports.findSendInviteList = async(inviter_id,team_id) => {
             inner join users u on i.invitee_id=u.user_id
             where i.inviter_id =? 
             and i.team_id = ?
-            and i.status = 'PENDING'
+            and i.status='PENDING'
             order by i.created_at desc
         `;
         const [rows] = await pool.query(sql, [inviter_id,team_id]);

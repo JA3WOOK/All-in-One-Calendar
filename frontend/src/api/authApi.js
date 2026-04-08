@@ -13,7 +13,16 @@ export const loginApi = async (payload) => {
 };
 
 export const signupApi = async (payload) => {
-  const response = await authApi.post("/signup", payload);
+  const response = await axios.post(
+    "http://localhost:3001/api/auth/signup",
+    payload,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      withCredentials: true,
+    }
+  );
   return response.data;
 };
 

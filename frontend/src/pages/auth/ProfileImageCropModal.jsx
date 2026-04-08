@@ -1,6 +1,48 @@
 import { useState } from "react";
 import Cropper from "react-easy-crop";
 
+function createImage(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener("load", () => resolve(image));
+    image.addEventListener("error", (error) => reject(error));
+    image.setAttribute("crossOrigin", "anonymous");
+    image.src = url;
+  });
+}
+
+async function getCroppedImageBlob(imageSrc, croppedAreaPixels) {
+  const image = await createImage(imageSrc);
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = croppedAreaPixels.width;
+  canvas.height = croppedAreaPixels.height;
+
+  ctx.drawImage(
+    image,
+    croppedAreaPixels.x,
+    croppedAreaPixels.y,
+    croppedAreaPixels.width,
+    croppedAreaPixels.height,
+    0,
+    0,
+    croppedAreaPixels.width,
+    croppedAreaPixels.height
+  );
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("크롭된 이미지를 생성하지 못했습니다."));
+        return;
+      }
+      resolve(blob);
+    }, "image/png");
+  });
+}
+
 export default function ProfileImageCropModal({
   imageSrc,
   onClose,
@@ -8,9 +50,23 @@ export default function ProfileImageCropModal({
 }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
-  const handleConfirm = () => {
-    onComplete(imageSrc);
+  const handleConfirm = async () => {
+    try {
+      if (!croppedAreaPixels) return;
+
+      const blob = await getCroppedImageBlob(imageSrc, croppedAreaPixels);
+      const preview = URL.createObjectURL(blob);
+      const file = new File([blob], `profile_${Date.now()}.png`, {
+        type: "image/png",
+      });
+
+      onComplete({ file, preview });
+    } catch (error) {
+      console.error("이미지 크롭 실패:", error);
+      alert("이미지 처리 중 오류가 발생했습니다.");
+    }
   };
 
   return (
@@ -37,6 +93,9 @@ export default function ProfileImageCropModal({
               showGrid={false}
               onCropChange={setCrop}
               onZoomChange={setZoom}
+              onCropComplete={(_, croppedPixels) =>
+                setCroppedAreaPixels(croppedPixels)
+              }
             />
           </div>
 

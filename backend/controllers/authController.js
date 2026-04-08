@@ -25,7 +25,11 @@ exports.signup = async (req, res, next) => {
     const name = req.body.name ? String(req.body.name).trim() : "";
     const email = req.body.email ? String(req.body.email).trim() : "";
     const password = req.body.password ? String(req.body.password).trim() : "";
-    const profileImage = req.body.profileImage ? String(req.body.profileImage).trim() : "";
+
+    const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
+    const profileEmoji = req.body.profileEmoji
+      ? String(req.body.profileEmoji).trim()
+      : null;
 
     if (!name) {
       return res.status(400).json({ message: "이름을 입력해주세요." });
@@ -37,7 +41,14 @@ exports.signup = async (req, res, next) => {
       return res.status(400).json({ message: "비밀번호를 입력해주세요." });
     }
 
-    const result = await authService.signup(name, email, password);
+    const result = await authService.signup(
+      name,
+      email,
+      password,
+      profileImage,
+      profileEmoji
+    );
+
     return res.status(201).json(result);
   } catch (err) {
     next(err);

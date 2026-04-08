@@ -4,6 +4,8 @@ import { ArrowLeft, Camera, UserRound } from "lucide-react";
 import { getMyProfileApi, updateMyProfileApi } from "../../api/userApi";
 import "./EditProfilePage.css";
 
+const BACKEND_URL = "http://localhost:3001";
+
 export default function EditProfilePage() {
   const navigate = useNavigate();
 
@@ -11,7 +13,7 @@ export default function EditProfilePage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [department, setDepartment] = useState("");
-  const [profileImage, setProfileImage] = useState("");
+  const [profileImage, setProfileImage] = useState(null); // File 객체 저장
   const [previewImage, setPreviewImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -20,14 +22,18 @@ export default function EditProfilePage() {
     const fetchProfile = async () => {
       try {
         const result = await getMyProfileApi();
-        const user = result;
+        const user = result.data ?? result;
 
         setName(user.name || "");
         setEmail(user.email || "");
         setPhone(user.phone || "");
         setDepartment(user.department || "");
-        setProfileImage(user.profile_image || "");
-        setPreviewImage(user.profile_image || "");
+
+        if (user.profile_image) {
+          setPreviewImage(`${BACKEND_URL}${user.profile_image}`);
+        } else {
+          setPreviewImage("");
+        }
       } catch (error) {
         alert(error.response?.data?.message || "프로필 조회 실패");
       } finally {
@@ -42,9 +48,8 @@ export default function EditProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const imageUrl = URL.createObjectURL(file);
-    setPreviewImage(imageUrl);
-    setProfileImage(imageUrl);
+    setProfileImage(file); // 업로드용
+    setPreviewImage(URL.createObjectURL(file)); // 미리보기용
   };
 
   const handleSubmit = async (e) => {
@@ -53,12 +58,16 @@ export default function EditProfilePage() {
     try {
       setSaving(true);
 
-      const result = await updateMyProfileApi({
-        name,
-        phone: phone || null,
-        department: department || null,
-        profile_image: profileImage || null,
-      });
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("phone", phone || "");
+      formData.append("department", department || "");
+
+      if (profileImage instanceof File) {
+        formData.append("profileImage", profileImage);
+      }
+
+      const result = await updateMyProfileApi(formData);
 
       alert(result.message || "프로필 수정 성공");
       navigate("/mypage");

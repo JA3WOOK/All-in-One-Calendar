@@ -16,6 +16,10 @@ export default function ChangePasswordPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // 추가: 비밀번호 영문+숫자 포함, 8자 이상 검사 정규식
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -24,8 +28,9 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    if (newPassword.length < 8) {
-      alert("비밀번호는 8자 이상이어야 합니다.");
+    // 수정: 단순 8자 이상 -> 영문/숫자 포함 정규식 검사로 강화
+    if (!passwordRegex.test(newPassword)) {
+      alert("비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다.");
       return;
     }
 

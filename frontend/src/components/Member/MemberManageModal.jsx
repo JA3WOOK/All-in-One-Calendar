@@ -11,6 +11,9 @@ function MemberManageModal(props = {}) {
     const team_id = props.teamId ?? params.team_id;
 
     const [email, setEmail] = useState("");
+    // 초대장 발송시 이메일 자동완성
+    const [searchResults, setSearchResults] = useState([]); // 검색된 유저 목록
+    const [showAuto, setShowAuto] = useState(false);       // 자동완성창 표시 여부
     const [myRole, setMyRole] = useState('VIEWER');
     const [members, setMembers] = useState([]);
     const [sendInvites, setSendInvites] = useState([]); // 변수명 통일
@@ -45,15 +48,54 @@ function MemberManageModal(props = {}) {
         }
     }, [team_id, myId]);
 
+    // 초대 취소 핸들러
+    const handleCancelInvite = async (inviteId) => {
+        if (window.confirm("초대장 발송을 취소하시겠습니까?")) {
+            try {
+                await API.delete('/api/invitations/cancel', { data: { invite_id: inviteId } });
+                alert("초대가 취소되었습니다.");
+                refreshList();
+            } catch (err) {
+                const errorMsg = err.response?.data?.error || "초대 취소에 실패했습니다.";
+                alert(errorMsg);
+            }
+        }
+    };
+
     // 3. 트리거 작동 (의존성 배열에서 함수를 제거)
     useEffect(() => {
         fetchMembers();
         fetchGroupInvites();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reloadKey, team_id]);
-// 💡 reloadKey나 team_id가 바뀔 때만 실행함
+    // 💡 reloadKey나 team_id가 바뀔 때만 실행함
 
     const refreshList = () => setReloadKey(prev => prev + 1);
+
+    // 초대장 발송시 이메일 자동 완성
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (email.trim().length >= 2) {
+                try {
+                    const res = await API.get(`/api/invitations/search-users?term=${email}`);
+                    setSearchResults(res.data);
+                    setShowAuto(true);
+                } catch (err) {
+                    console.error("유저 검색 실패", err);
+                }
+            } else {
+                setSearchResults([]);
+                setShowAuto(false);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [email]);
+
+    const handleSelectUser = (selectedEmail) => {
+        setEmail(selectedEmail);
+        setSearchResults([]);
+        setShowAuto(false);
+    };
 
     // 현재 그룹에 멤버 초대
     const handleInvite = async () => {
@@ -64,7 +106,8 @@ function MemberManageModal(props = {}) {
             setEmail("");
             refreshList();
         } catch (err) {
-            alert(err.response?.data?.message || "초대 실패");
+            const serverMessage = err.response?.data?.errors?.[0] || "초대 실패";
+            alert(serverMessage);
         }
     };
 
@@ -107,11 +150,35 @@ function MemberManageModal(props = {}) {
                     <h2 style={{ margin: 0 }}>👥 {teamName} 멤버 관리</h2>
                     <button onClick={() => props.onClose ? props.onClose() : navigate(-1)} style={closeBtnStyle}>&times;</button>
                 </div>
-
-                <div style={searchSectionStyle}>
-                    <input type="email" placeholder="이메일 입력" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
-                    {myRole === 'OWNER' && <button onClick={handleInvite} style={inviteBtnStyle}>초대</button>}
-                </div>
+                <div style={{ position: 'relative' }}> 
+                    <div style={searchSectionStyle}>
+                        <input 
+                        type="email" 
+                        placeholder="이메일 입력" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        style={inputStyle} 
+                        />
+                        {myRole === 'OWNER' && <button onClick={handleInvite} style={inviteBtnStyle}>초대</button>}
+                        </div>
+                        
+                        {/* 자동완성 목록 창 */}
+                        {showAuto && searchResults.length > 0 && (
+                            <div style={autoCompleteContainer}>
+                                {searchResults.map((user) => (
+                                    <div 
+                                     key={user.user_id} 
+                                     onClick={() => handleSelectUser(user.email)}
+                                     style={autoItemStyle}
+                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                                     >
+                                        <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#333' }}>{user.name}</div>
+                                        <div style={{ fontSize: '12px', color: '#888' }}>{user.email}</div></div>
+                                    ))}
+                                    </div>
+                                )}
+                                </div>            
 
                 <hr style={dividerStyle} />
 
@@ -153,19 +220,31 @@ function MemberManageModal(props = {}) {
                     <h3 style={{ ...sectionTitleStyle, marginTop: '25px' }}>보낸 초대 현황 ({sendInvites.length})</h3>
                     {sendInvites.length > 0 ? (
                         sendInvites.map((invite) => (
-                            <div key={invite.invite_id} style={{ ...memberItemStyle, backgroundColor: '#fcfcfc', padding: '10px' }}>
-                                <div style={memberInfoStyle}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        <strong>{invite.invitee_name}</strong>
+                        <div key={invite.invite_id} style={{ ...memberItemStyle, backgroundColor: '#fcfcfc', padding: '10px' }}>
+                            <div style={memberInfoStyle}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <strong>{invite.invitee_name}</strong>
+
+                                    {invite.status === 'PENDING' && (
                                         <span style={pendingBadgeStyle}>대기중</span>
-                                    </div>
-                                    <span style={emailTextStyle}>초대일: {new Date(invite.created_at).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p style={{ textAlign: 'center', color: '#ccc', fontSize: '13px' }}>대기 중인 초대가 없습니다.</p>
-                    )}
+                                        )}
+                                        </div>
+                                        {/* 초대 취소 버튼 : PENDING 상태에만 보임 */}
+                                        <span style={emailTextStyle}>초대일: {new Date(invite.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        <div style={actionGroupStyle}>
+                                            {invite.status === 'PENDING' && (
+                                                <button onClick={() => handleCancelInvite(invite.invite_id)} 
+                                                style={cancelBtnStyle}>
+                                                    취소
+                                                    </button>
+                                                )}
+                                                </div>                                    
+                                        </div>
+                                        ))
+                                    ) : (
+                                    <p style={{ textAlign: 'center', color: '#ccc', fontSize: '13px' }}>초대 내역이 없습니다.</p>
+                                    )}
                 </div>
             </div>
         </div>
@@ -186,8 +265,11 @@ const memberItemStyle = { display: 'flex', justifyContent: 'space-between', alig
 const memberInfoStyle = { display: 'flex', flexDirection: 'column', textAlign: 'left', gap: '2px' };
 const emailTextStyle = { fontSize: '13px', color: '#999' };
 const pendingBadgeStyle = { fontSize: '11px', color: '#faad14', backgroundColor: '#fffbe6', border: '1px solid #ffe58f', padding: '2px 6px', borderRadius: '4px' };
+const cancelBtnStyle = { padding: '5px 10px', fontSize: '12px', backgroundColor: '#f5f5f5', color: '#666', border: '1px solid #d9d9d9', borderRadius: '6px', cursor: 'pointer'};
 const actionGroupStyle = { display: 'flex', gap: '8px' };
 const kickBtnStyle = { padding: '5px 10px', fontSize: '12px', backgroundColor: '#fff1f0', color: '#ff4d4f', border: '1px solid #ffa39e', borderRadius: '6px', cursor: 'pointer' };
 const selectStyle = { padding: '4px 8px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px', backgroundColor: '#fff', cursor: 'pointer', outline: 'none',marginRight: '5px'};
+const autoCompleteContainer = {position: 'absolute',top: '50px', left: 0,right: '85px',backgroundColor: '#fff',borderRadius: '8px',boxShadow: '0 8px 20px rgba(0,0,0,0.15)',zIndex: 100,maxHeight: '200px',overflowY: 'auto',border: '1px solid #eee'};
 
+const autoItemStyle = {padding: '10px 15px',cursor: 'pointer',textAlign: 'left',borderBottom: '1px solid #fafafa',display: 'flex',flexDirection: 'column',gap: '2px',transition: 'background-color 0.2s'};
 export default MemberManageModal;

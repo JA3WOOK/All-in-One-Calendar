@@ -71,6 +71,9 @@ exports.login = async (email, password, ip) => {
     email: user.email,
   });
 
+  // 수정: login 안에 잘못 들어가 있던 RESET TOKEN 로그 삭제
+  // console.log("RESET TOKEN:", resetToken);
+
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 7);
 
@@ -97,7 +100,7 @@ exports.login = async (email, password, ip) => {
 };
 
 // 회원가입
-exports.signup = async (name, email, password, profileImage) => {
+exports.signup = async (name, email, password, profileImage, profileEmoji) => {
   if (!name || !email || !password) {
     const error = new Error("입력값을 다시 확인해주세요.");
     error.status = 400;
@@ -113,7 +116,14 @@ exports.signup = async (name, email, password, profileImage) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const result = await userModel.createUser(name, email, hashedPassword);
+
+  const finalProfileImage = profileImage || profileEmoji;
+  const result = await userModel.createUser(
+    name, 
+    email,
+    hashedPassword,
+    finalProfileImage
+  );
 
   return {
     message: "회원가입 성공",
@@ -206,6 +216,9 @@ exports.requestPasswordReset = async (email) => {
     email: user.email,
   });
 
+  // 추가: 개발 중 토큰 확인용 로그
+  console.log("RESET TOKEN:", resetToken);
+
   const resetLink = `${
     process.env.FRONTEND_URL || "http://localhost:5173"
   }/reset-password?token=${resetToken}`;
@@ -249,7 +262,8 @@ exports.resetPasswordWithToken = async (token, newPassword) => {
   );
 
   if (!result) {
-    const error = new Error("비밀번호 재설정 실패");
+    // 수정: 같은 비밀번호 재사용 시에도 여기로 들어오므로 메시지 명확화
+    const error = new Error("기존 비밀번호와 다른 비밀번호를 입력해주세요.");
     error.status = 400;
     throw error;
   }
