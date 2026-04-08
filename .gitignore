@@ -1,0 +1,26 @@
+# node modules
+node_modules/
+
+# env
+.env
+backend/.env
+frontend/.env
+
+# build
+dist/
+build/
+frontend/dist/
+
+# logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# uploads (파일 업로드)
+backend/uploads/
+

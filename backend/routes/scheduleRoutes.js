@@ -1,0 +1,16 @@
+// /api/schedules 경로 정의
+
+const express = require('express');
+const router = express.Router();
+const scheduleController = require('../controllers/scheduleController');
+const authMiddleware = require('../middleware/authMiddleware');
+
+router.use(authMiddleware);
+
+// GET /api/schedules 경로로 들어오면 컨트롤러 실행!
+router.get('/', scheduleController.getSchedules);
+router.post('/', scheduleController.createSchedule);
+router.put("/:id", scheduleController.editSchedule);
+router.delete("/:id", scheduleController.removeSchedule);
+
+module.exports = router;
