@@ -25,7 +25,11 @@ const getMyProfile = async (req, res) => {
 const updateMyProfile = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const { name, phone, department, profile_image } = req.body;
+    const { name, phone, department} = req.body;
+
+    // 파일 업로드 되었으면 /uploads/파일명 저장
+    const profile_image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    
 
     const updatedUser = await userService.updateUserProfile(userId, {
       name,
