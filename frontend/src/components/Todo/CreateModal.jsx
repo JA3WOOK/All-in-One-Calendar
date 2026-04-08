@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; // useEffect 추가
 
 // ── 색상 변수 ────────────────────────────────────
 const BG = "#ffffff";
@@ -35,16 +35,16 @@ const REPEAT_LABELS = { daily: "일", weekly: "주", monthly: "월" };
  *   onDelete     (data) => void | null
  */
 export default function CreateModal({
-                                        defaultDate = "",
-                                        initialData = null,
-                                        teams = [],
-                                        teamMembers = {},
-                                        onTeamSelect,
-                                        onClose,
-                                        onSubmit,
-                                        onDelete,
-                                        viewOnly = false,
-                                    }) {
+    defaultDate = "",
+    initialData = null,
+    teams = [],
+    teamMembers = {},
+    onTeamSelect,
+    onClose,
+    onSubmit,
+    onDelete,
+    viewOnly = false,
+}) {
     const isEdit = !!initialData;
 
     // ── 탭 / 스코프 ─────────────────────────────
@@ -67,8 +67,12 @@ export default function CreateModal({
     const defaultStart = defaultDate ? `${defaultDate}T09:00` : "";
     const defaultEnd = defaultDate ? `${defaultDate}T10:00` : "";
     const [title, setTitle] = useState(initialData?.title ?? "");
-    const [startAt, setStartAt] = useState(initialData?.startAt ?? defaultStart);
-    const [endAt, setEndAt] = useState(initialData?.endAt ?? defaultEnd);
+    const [startAt, setStartAt] = useState(
+        initialData?.start_at || initialData?.startAt || defaultStart
+    );
+    const [endAt, setEndAt] = useState(
+        initialData?.end_at || initialData?.endAt || defaultEnd
+    );
     const [description, setDescription] = useState(initialData?.description ?? "");
     // location: { name, address, lat, lng } 객체로 관리
     const [location, setLocation] = useState(
@@ -89,6 +93,38 @@ export default function CreateModal({
     const [deleteScope, setDeleteScope] = useState("only");
     const hasRepeatGroup = !!(initialData?.repeatGroupId);
 
+    // [추가] 데이터 강제 바인딩 로직
+    useEffect(() => {
+        if (initialData) {
+            console.log("수정 모드 데이터 감지:", initialData); // 브라우저 콘솔에서 확인용
+
+            // 1. 날짜 데이터 (언더바/카멜케이스 둘 다 체크)
+            const sAt = initialData.start_at || initialData.startAt;
+            const eAt = initialData.end_at || initialData.endAt;
+            
+            if (sAt) setStartAt(sAt);
+            if (eAt) setEndAt(eAt);
+
+            // 2. 제목 및 나머지 필드 강제 업데이트
+            if (initialData.title) setTitle(initialData.title);
+            if (initialData.description) setDescription(initialData.description);
+            if (initialData.category) setCategory(initialData.category);
+            
+            // 3. 할 일 전용 날짜
+            const dDate = initialData.due_date || initialData.dueDate;
+            if (dDate) setDueDate(dDate);
+
+            // 4. 장소 데이터 처리 (객체 형태 확인)
+            if (initialData.location) {
+                if (typeof initialData.location === 'object') {
+                    setLocation(initialData.location);
+                } else {
+                    setLocation({ name: initialData.location, address: initialData.location, lat: null, lng: null });
+                }
+            }
+        }
+    }, [initialData]);
+
     // ── 핸들러 ──────────────────────────────────
     const handleTeamChange = (id) => {
         setTeamId(id);
@@ -103,37 +139,68 @@ export default function CreateModal({
         setAssignBy("");
     };
 
+    // ── 저장 및 수정 처리 ────────────────────────────────
     const handleSubmit = () => {
-        if (viewOnly) return; // VIEWER는 저장 불가
-        // 팀 탭인데 팀 미선택 시 차단
+        if (viewOnly) return; // VIEWER 권한은 저장 불가
+
+        // 1. 필수 입력값 체크 (제목/내용)
+        if (tab === "schedule" && !title.trim()) {
+            alert("일정 제목을 입력해주세요.");
+            return;
+        }
+        if (tab === "todo" && !content.trim()) {
+            alert("할 일 내용을 입력해주세요.");
+            return;
+        }
+
+        // 2. 팀 일정일 경우 그룹 선택 여부 체크
         if (scope === 'team' && !teamId) {
             alert('그룹을 선택해주세요.');
             return;
         }
+
+        // 3. 백엔드와 맞춘 데이터 구조 생성 (언더바 형식 적용)
         const base = {
             id: initialData?.id ?? null,
-            category, priority,
-            isRepeat,
-            repeatType: isRepeat ? repeatType : null,
-            repeatInterval: isRepeat ? repeatInterval : 1,
-            repeatEndAt: isRepeat ? repeatEndAt : null,
+            category,
+            priority,
+            is_repeat: isRepeat,
+            repeat_type: isRepeat ? repeatType : null,
+            repeat_interval: isRepeat ? repeatInterval : 1,
+            repeat_end_at: isRepeat ? repeatEndAt : null,
         };
+
         if (tab === "schedule") {
+            // [일정 수정/생성] 백엔드 컨트롤러가 구조분해 할당으로 받는 이름과 동일하게 매핑
             onSubmit?.({
-                type: "schedule", scope, title, startAt, endAt, description, location,
-                teamId: scope === "team" ? teamId : null, ...base
+                type: "schedule",
+                scope,
+                title,
+                start_at: startAt,       // startAt -> start_at
+                end_at: endAt,           // endAt -> end_at
+                description,
+                location,                // { name, address, lat, lng } 객체
+                team_id: scope === "team" ? teamId : null,
+                ...base
             });
         } else {
+            // [할 일 수정/생성]
             onSubmit?.({
-                type: "todo", scope, content, dueDate, isCarriedOver, isDone,
-                teamId: scope === "team" ? teamId : null,
-                assignBy: scope === "team" ? assignBy : null,
-                // 반복 설정이 있으면 항상 재생성, 없으면 단건 수정
+                type: "todo",
+                scope,
+                content,
+                due_date: dueDate,       // dueDate -> due_date
+                is_carried_over: isCarriedOver,
+                is_done: isDone,
+                team_id: scope === "team" ? teamId : null,
+                assign_by: scope === "team" ? assignBy : null,
                 editScope: isRepeat ? "rebuild" : "only",
-                repeatGroupId: initialData?.repeatGroupId ?? null,
+                repeat_group_id: initialData?.repeatGroupId ?? null,
                 ...base
             });
         }
+
+        // 4. 모달 닫기
         onClose?.();
     };
 
@@ -153,10 +220,10 @@ export default function CreateModal({
                 // 기존 location State 업데이트
                 // location 객체로 저장 (name + address 는 선택된 주소, lat/lng는 추후 geocoder 연동)
                 setLocation({
-                    name:    data.buildingName || fullAddr,
+                    name: data.buildingName || fullAddr,
                     address: fullAddr,
-                    lat:     null,
-                    lng:     null,
+                    lat: null,
+                    lng: null,
                 });
             },
         }).open();
@@ -376,7 +443,7 @@ export default function CreateModal({
                 <div style={s.footer}>
                     {viewOnly ? (
                         <>
-                            <span style={{ fontSize: 12, color: '#9ca3af', display:'flex', alignItems:'center', gap:4 }}>
+                            <span style={{ fontSize: 12, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 4 }}>
                                 👁 보기 전용 (VIEWER)
                             </span>
                             <button style={s.cancelBtn} onClick={onClose}>닫기</button>
@@ -417,20 +484,20 @@ function ScopeSwitch({ value, onChange, disabled, noTeam }) {
                 const teamBlocked = v === "team" && noTeam;
                 return (
                     <button key={v}
-                            onClick={() => !teamBlocked && onChange(v)}
-                            title={teamBlocked ? "소속된 그룹이 없습니다" : undefined}
-                            style={{
-                                background: value === v ? "#fff" : "none",
-                                border: "none",
-                                borderRadius: 6,
-                                color: teamBlocked ? "#d1d5db" : value === v ? TEXT : MUTED,
-                                fontSize: 13,
-                                padding: "4px 12px",
-                                cursor: teamBlocked ? "not-allowed" : disabled ? "default" : "pointer",
-                                fontWeight: value === v ? 500 : 400,
-                                boxShadow: value === v ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                                opacity: teamBlocked ? 0.4 : 1,
-                            }}>{l}</button>
+                        onClick={() => !teamBlocked && onChange(v)}
+                        title={teamBlocked ? "소속된 그룹이 없습니다" : undefined}
+                        style={{
+                            background: value === v ? "#fff" : "none",
+                            border: "none",
+                            borderRadius: 6,
+                            color: teamBlocked ? "#d1d5db" : value === v ? TEXT : MUTED,
+                            fontSize: 13,
+                            padding: "4px 12px",
+                            cursor: teamBlocked ? "not-allowed" : disabled ? "default" : "pointer",
+                            fontWeight: value === v ? 500 : 400,
+                            boxShadow: value === v ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                            opacity: teamBlocked ? 0.4 : 1,
+                        }}>{l}</button>
                 );
             })}
         </div>
@@ -440,7 +507,7 @@ function ScopeSwitch({ value, onChange, disabled, noTeam }) {
 function TeamSelect({ teams, value, onChange, disabled }) {
     return (
         <select style={{ ...s.select, width: "100%", opacity: disabled ? 0.6 : 1 }}
-                value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
+            value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
             <option value="">팀 선택</option>
             {teams.map((t) => <option key={t.team_id} value={t.team_id}>{t.team_name}</option>)}
         </select>
@@ -566,7 +633,7 @@ function Chips({ list, labels, active, onChange, colorFn }) {
 // ── 아이콘 ───────────────────────────────────────
 const Ic = ({ d }) => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+        strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
 );
 const ClockSVG = () => <Ic d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 5v5l4 2" />;
 const RepeatSVG = () => <Ic d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4m14 2v2a4 4 0 0 1-4 4H3" />;
@@ -580,8 +647,8 @@ const AssignSVG = () => <Ic d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4
 const DoneSVG = () => <Ic d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />;
 const TrashSVG = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-         style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5 }}>
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5 }}>
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
         <path d="M10 11v6M14 11v6" />
