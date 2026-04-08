@@ -22,6 +22,9 @@ export default function ResetPasswordPage() {
   const [modalMessage, setModalMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // 추가: 비밀번호 영문+숫자 포함, 8자 이상 검사 정규식
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
   const openModal = (title, message, success = false) => {
     setModalTitle(title);
     setModalMessage(message);
@@ -53,10 +56,15 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    if (newPassword.length < 8) {
-      openModal("입력 오류", "비밀번호는 8자 이상이어야 합니다.");
+    // 수정: 단순 8자 검사 -> 영문/숫자 포함 정규식 검사로 강화
+    if (!passwordRegex.test(newPassword)) {
+      openModal(
+        "입력 오류",
+        "비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다."
+      );
       return;
     }
+  
 
     if (newPassword !== confirmPassword) {
       openModal("입력 오류", "비밀번호가 일치하지 않습니다.");
@@ -130,58 +138,61 @@ export default function ResetPasswordPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="reset-form">
-            <div className="reset-input-group">
-              <label htmlFor="newPassword">새 비밀번호</label>
+  <div className="reset-input-group">
+    <label htmlFor="newPassword">새 비밀번호</label>
 
-              <div className="reset-input-wrap">
-                <span className="reset-input-icon">🔒</span>
-                <input
-                  id="newPassword"
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder="8자 이상 입력하세요"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="reset-eye-button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  👁
-                </button>
-              </div>
-            </div>
+    <div className="reset-input-wrap">
+      <span className="reset-input-icon">🔒</span>
+      <input
+        id="newPassword"
+        type={showNewPassword ? "text" : "password"}
+        placeholder="8자 이상 입력하세요"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+      />
+      <button
+        type="button"
+        className="reset-eye-button"
+        onClick={() => setShowNewPassword(!showNewPassword)}
+      >
+        👁
+      </button>
+    </div>
 
-            <div className="reset-input-group">
-              <label htmlFor="confirmPassword">비밀번호 확인</label>
+    {/* 추가: 비밀번호 조건 안내 문구 */}
+    <small>비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다.</small>
+  </div>
 
-              <div className="reset-input-wrap">
-                <span className="reset-input-icon">🔒</span>
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="비밀번호를 다시 입력하세요"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="reset-eye-button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  👁
-                </button>
-              </div>
-            </div>
+  <div className="reset-input-group">
+    <label htmlFor="confirmPassword">비밀번호 확인</label>
 
-            <button
-              type="submit"
-              className="reset-primary-button"
-              disabled={loading}
-            >
-              {loading ? "변경 중..." : "비밀번호 변경"}
-            </button>
-          </form>
+    <div className="reset-input-wrap">
+      <span className="reset-input-icon">🔒</span>
+      <input
+        id="confirmPassword"
+        type={showConfirmPassword ? "text" : "password"}
+        placeholder="비밀번호를 다시 입력하세요"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+      />
+      <button
+        type="button"
+        className="reset-eye-button"
+        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+      >
+        👁
+      </button>
+    </div>
+  </div>
+
+  <button
+    type="submit"
+    className="reset-primary-button"
+    disabled={loading}
+  >
+    {loading ? "변경 중..." : "비밀번호 변경"}
+  </button>
+</form>
         </div>
       </div>
 

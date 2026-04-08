@@ -24,6 +24,12 @@ export default function SignupPage() {
   const [imageSrc, setImageSrc] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
 
+  // 추가: 이메일 형식 강화 정규식
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+  // 추가: 비밀번호 영문+숫자 포함, 8자 이상 검사 정규식
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
   const profiles = ["👤", "🧑", "👩", null];
 
   const handleChange = (e) => {
@@ -51,21 +57,24 @@ export default function SignupPage() {
 
     const preview = URL.createObjectURL(file);
 
-    setImageSrc(preview);
+    setImageSrc({
+      preview,
+      file,
+    });
     setShowCropModal(true);
     setUploadError("");
 
     e.target.value = "";
   };
 
-  const handleCropComplete = ({ file, preview }) => {
+  const handleCropComplete = (croppedImage) => {
     const newImage = {
-      file,
-      preview,
+      file: imageSrc.file,
+      preview: croppedImage,
     };
 
     setUploadedProfiles((prev) => [...prev, newImage]);
-    setSelectedProfile(preview);
+    setSelectedProfile(croppedImage);
 
     setShowCropModal(false);
     setImageSrc(null);
@@ -106,9 +115,15 @@ export default function SignupPage() {
       return;
     }
 
-    if (form.password.length < 8) {
+    if (!emailRegex.test(form.email)) {
       setIsError(true);
-      setMessage("비밀번호는 8자 이상 입력해주세요.");
+      setMessage("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    if (!passwordRegex.test(form.password)) {
+      setIsError(true);
+      setMessage("비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다.");
       return;
     }
 
@@ -315,6 +330,7 @@ export default function SignupPage() {
                 value={form.email}
                 onChange={handleChange}
               />
+              <small>올바른 이메일 형식으로 입력해주세요.</small>
             </div>
 
             <div className="form-group">
@@ -327,6 +343,7 @@ export default function SignupPage() {
                 value={form.password}
                 onChange={handleChange}
               />
+              <small>비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다.</small>
             </div>
 
             <div className="form-group">
