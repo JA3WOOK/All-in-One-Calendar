@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './index.css'
+import './styles/tailwind.css'
 import App from './App.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import SignupPage from './pages/auth/SignupPage.jsx'
@@ -11,6 +12,7 @@ import ChangePasswordPage from './pages/user/ChangePasswordPage.jsx'
 import ForgotPasswordPage from './pages/user/ForgotPasswordPage.jsx'
 import ResetPasswordPage from './pages/user/ResetPasswordPage.jsx'
 import MemberManageModal from './components/Member/MemberManageModal.jsx'
+import { CalendarStatsDashboard } from './app/components/CalendarStatsDashboard.jsx'
 
 // 로그인 여부 확인
 function PrivateRoute({ children }) {
@@ -34,6 +36,11 @@ createRoot(document.getElementById('root')).render(
                 {/* 메인 캘린더 (로그인 필요) */}
                 <Route path="/calendar" element={
                     <PrivateRoute><App /></PrivateRoute>
+                } />
+
+                {/* 통계박스 */}
+                <Route path="/stats" element={
+                    <PrivateRoute><CalendarStatsDashboard /></PrivateRoute>
                 } />
 
                 {/* 마이페이지 (로그인 필요) */}
