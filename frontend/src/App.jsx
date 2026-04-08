@@ -14,63 +14,63 @@ import './App.css';
 
 // 팀 색상 팔레트 (priority/personal 베이지 색상 제외)
 const TEAM_COLOR_PALETTE = [
-    '#4a80c4','#1e88e5','#0097a7','#00acc1','#00897b',
-    '#7c3aed','#9c27b0','#d81b60','#e53935','#f4511e',
-    '#e67e22','#546e7a','#37474f','#6d4c41','#ff7043',
-    '#43a047','#558b2f','#1565c0','#6a1b9a','#ad1457',
+    '#4a80c4', '#1e88e5', '#0097a7', '#00acc1', '#00897b',
+    '#7c3aed', '#9c27b0', '#d81b60', '#e53935', '#f4511e',
+    '#e67e22', '#546e7a', '#37474f', '#6d4c41', '#ff7043',
+    '#43a047', '#558b2f', '#1565c0', '#6a1b9a', '#ad1457',
 ];
 
 function App() {
     const navigate = useNavigate();
     // 로그인 유저 ID (렌더링마다 최신값)
-    const [dbEvents, setDbEvents]               = useState([]);
-    const [mainDate, setMainDate]               = useState(new Date());
-    const [miniDate, setMiniDate]               = useState(new Date());
+    const [dbEvents, setDbEvents] = useState([]);
+    const [mainDate, setMainDate] = useState(new Date());
+    const [miniDate, setMiniDate] = useState(new Date());
 
     // ── 모달 상태 ─────────────────────────────────────
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isGroupModalOpen,  setIsGroupModalOpen]  = useState(false);
-    const [newGroupName,      setNewGroupName]      = useState('');
-    const [newGroupColor,     setNewGroupColor]     = useState('#4a80c4');
+    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+    const [newGroupName, setNewGroupName] = useState('');
+    const [newGroupColor, setNewGroupColor] = useState('#4a80c4');
 
     // 팀 수정 모달
-    const [isEditTeamModalOpen,   setIsEditTeamModalOpen]   = useState(false);
-    const [editingTeam,           setEditingTeam]           = useState(null);
-    const [editTeamName,          setEditTeamName]          = useState('');
-    const [editTeamColor,         setEditTeamColor]         = useState('#4a80c4');
+    const [isEditTeamModalOpen, setIsEditTeamModalOpen] = useState(false);
+    const [editingTeam, setEditingTeam] = useState(null);
+    const [editTeamName, setEditTeamName] = useState('');
+    const [editTeamColor, setEditTeamColor] = useState('#4a80c4');
 
     // 팀 삭제 확인 모달
     const [isDeleteTeamModalOpen, setIsDeleteTeamModalOpen] = useState(false);
-    const [deletingTeam,          setDeletingTeam]          = useState(null);
+    const [deletingTeam, setDeletingTeam] = useState(null);
 
     // 사이드바 hover
-    const [hoveredTeamId,         setHoveredTeamId]         = useState(null);
+    const [hoveredTeamId, setHoveredTeamId] = useState(null);
 
     // 그룹관리 모달
     const [isTeamManageOpen, setIsTeamManageOpen] = useState(false);
 
     // 통계 섹션 열림 여부
     const [isStatsOpen, setIsStatsOpen] = useState(false);
-    const [isEditModalOpen,   setIsEditModalOpen]   = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     // ── 선택된 날짜 / 이벤트 ──────────────────────────
-    const [selectedDate,  setSelectedDate]  = useState(""); // 달력 날짜 클릭 시
+    const [selectedDate, setSelectedDate] = useState(""); // 달력 날짜 클릭 시
     const [selectedEvent, setSelectedEvent] = useState(null); // 이벤트 클릭 시
 
     // ── 팀 / 팀 멤버 ──────────────────────────────────
-    const [teams,       setTeams]       = useState([]);
+    const [teams, setTeams] = useState([]);
     const [teamMembers, setTeamMembers] = useState({}); // { [team_id]: [...members] }
 
     // ── Todo 이벤트 ───────────────────────────────────
     const [todoEvents, setTodoEvents] = useState([]);
 
     // ── 뷰 / 사이드바 ─────────────────────────────────
-    const [currentView,    setCurrentView]    = useState('dayGridMonth');
-    const [isGroupOpen,    setIsGroupOpen]    = useState(true);
+    const [currentView, setCurrentView] = useState('dayGridMonth');
+    const [isGroupOpen, setIsGroupOpen] = useState(true);
     const [isPersonalOpen, setIsPersonalOpen] = useState(true);
 
     const [filters, setFilters] = useState({
-        personal:     true,   // 개인 일정
+        personal: true,   // 개인 일정
         personalTodo: true,   // 개인 할일
         teams: {},
         holidays: true,
@@ -175,30 +175,30 @@ function App() {
 
             // grouped { "YYYY-MM-DD": [todo,...] }  →  FullCalendar event 배열
             // ※ team_id / team_color 를 마지막에 명시해 ...todo 덮어쓰기 방지
-            const BEIGE_BG     = '#fef3e2'; // 개인 todo 고정 베이지 배경
+            const BEIGE_BG = '#fef3e2'; // 개인 todo 고정 베이지 배경
             const BEIGE_BORDER = '#c8952a'; // 개인 todo 고정 베이지 border
 
             const toEvents = (grouped, team_id = null, team_color = null) =>
                 Object.entries(grouped).flatMap(([date, todos]) =>
                     todos.map((todo) => {
                         const isTeam = !!team_id;
-                        const bg     = isTeam ? (team_color ?? '#4a80c4') + '22' : BEIGE_BG;
-                        const border = isTeam ? (team_color ?? '#4a80c4')         : BEIGE_BORDER;
+                        const bg = isTeam ? (team_color ?? '#4a80c4') + '22' : BEIGE_BG;
+                        const border = isTeam ? (team_color ?? '#4a80c4') : BEIGE_BORDER;
                         return {
-                            id:              `todo-${todo.todo_id}`,
-                            title:           todo.content,
-                            start:           date,
-                            allDay:          true,
+                            id: `todo-${todo.todo_id}`,
+                            title: todo.content,
+                            start: date,
+                            allDay: true,
                             backgroundColor: bg,
-                            borderColor:     border,
-                            textColor:       '#2d2d2d',
+                            borderColor: border,
+                            textColor: '#2d2d2d',
                             extendedProps: {
                                 ...todo,
-                                eventType:  'todo',
-                                isDone:     !!todo.is_done,
-                                priority:   todo.priority,
-                                category:   todo.category,
-                                team_id:    team_id ?? todo.team_id ?? null,
+                                eventType: 'todo',
+                                isDone: !!todo.is_done,
+                                priority: todo.priority,
+                                category: todo.category,
+                                team_id: team_id ?? todo.team_id ?? null,
                                 team_color: team_color ?? null,
                             },
                         };
@@ -206,7 +206,7 @@ function App() {
                 );
 
             const personal = toEvents(personalGrouped, null, null);
-            const team     = teamResults.flatMap(({ team_id, team_color, data }) =>
+            const team = teamResults.flatMap(({ team_id, team_color, data }) =>
                 toEvents(data, team_id, team_color)
             );
             setTodoEvents([...personal, ...team]);
@@ -225,11 +225,11 @@ function App() {
     const handleMiniNext = () => setMiniDate(new Date(miniDate.getFullYear(), miniDate.getMonth() + 1, 1));
 
     const renderMiniDays = () => {
-        const year     = miniDate.getFullYear();
-        const month    = miniDate.getMonth();
-        const lastDay  = new Date(year, month + 1, 0).getDate();
+        const year = miniDate.getFullYear();
+        const month = miniDate.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
         const startDay = new Date(year, month, 1).getDay();
-        const days     = [];
+        const days = [];
 
         for (let i = 0; i < startDay; i++) {
             days.push(<div key={`empty-${i}`} className="mini-day empty" />);
@@ -237,10 +237,10 @@ function App() {
 
         for (let d = 1; d <= lastDay; d++) {
             const currentStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const dayEvents  = dbEvents.filter((e) => e.start && e.start.startsWith(currentStr));
+            const dayEvents = dbEvents.filter((e) => e.start && e.start.startsWith(currentStr));
             const hasPersonal = dayEvents.some((e) => !e.extendedProps?.team_id);
-            const hasTeam     = dayEvents.some((e) => e.extendedProps?.team_id && !e.extendedProps?.is_study);
-            const hasStudy    = dayEvents.some((e) => e.extendedProps?.is_study);
+            const hasTeam = dayEvents.some((e) => e.extendedProps?.team_id && !e.extendedProps?.is_study);
+            const hasStudy = dayEvents.some((e) => e.extendedProps?.is_study);
 
             days.push(
                 <div
@@ -251,8 +251,8 @@ function App() {
                     <span className="day-number">{d}</span>
                     <div className="mini-dot-container">
                         {hasPersonal && <span className="mini-dot personal-dot" />}
-                        {hasTeam     && <span className="mini-dot team-dot" />}
-                        {hasStudy    && <span className="mini-dot study-dot" />}
+                        {hasTeam && <span className="mini-dot team-dot" />}
+                        {hasStudy && <span className="mini-dot study-dot" />}
                     </div>
                 </div>
             );
@@ -279,51 +279,51 @@ function App() {
                 ? (teams.find(t => String(t.team_id) === String(ep.team_id))?.role ?? 'VIEWER')
                 : null;
             setSelectedEvent({
-                type:          'todo',
-                id:            ep.todo_id,
-                scope:         ep.team_id ? 'team' : 'personal',
-                viewOnly:      todoTeamRole === 'VIEWER',
-                content:       ep.content       ?? info.event.title,
-                dueDate:       ep.due_date      ? String(ep.due_date).slice(0, 10) : "",
-                category:      ep.category      ?? "",
-                priority:      ep.priority      ?? "MEDIUM",
+                type: 'todo',
+                id: ep.todo_id,
+                scope: ep.team_id ? 'team' : 'personal',
+                viewOnly: todoTeamRole === 'VIEWER',
+                content: ep.content ?? info.event.title,
+                dueDate: ep.due_date ? String(ep.due_date).slice(0, 10) : "",
+                category: ep.category ?? "",
+                priority: ep.priority ?? "MEDIUM",
                 isCarriedOver: !!ep.is_carried_over,
-                isRepeat:      !!ep.is_repeat,
-                repeatType:    ep.repeat_type   ?? "weekly",
-                repeatInterval:ep.repeat_interval ?? 1,
-                repeatEndAt:   ep.repeat_end_at ? String(ep.repeat_end_at).slice(0, 10) : "",
+                isRepeat: !!ep.is_repeat,
+                repeatType: ep.repeat_type ?? "weekly",
+                repeatInterval: ep.repeat_interval ?? 1,
+                repeatEndAt: ep.repeat_end_at ? String(ep.repeat_end_at).slice(0, 10) : "",
                 repeatGroupId: ep.repeat_group_id ?? null,
-                teamId:        ep.team_id       ?? null,
-                assignBy:      ep.assign_by     ?? null,
-                isDone:        !!ep.is_done,
+                teamId: ep.team_id ?? null,
+                assignBy: ep.assign_by ?? null,
+                isDone: !!ep.is_done,
             });
         } else {
             // ── Schedule ─────────────────────────────────────────────────
             setSelectedEvent({
-                type:        'schedule',
-                id:          ep.sched_id ?? info.event.id,
-                scope:       ep.team_id ? 'team' : 'personal',
-                title:       info.event.title,
-                startAt:     info.event.startStr.slice(0, 16),
-                endAt:       info.event.end ? info.event.endStr.slice(0, 16) : info.event.startStr.slice(0, 16),
+                type: 'schedule',
+                id: ep.sched_id ?? info.event.id,
+                scope: ep.team_id ? 'team' : 'personal',
+                title: info.event.title,
+                startAt: info.event.startStr.slice(0, 16),
+                endAt: info.event.end ? info.event.endStr.slice(0, 16) : info.event.startStr.slice(0, 16),
                 description: ep.description ?? "",
                 // DB JOIN 결과: location_name, address, latitude, longitude 컬럼으로 옴
                 // 또는 기존 문자열 location 필드로 올 수 있으므로 두 케이스 처리
                 location: ep.location_name || ep.address
                     ? {
-                        name:    ep.location_name ?? ep.location ?? '',
-                        address: ep.address       ?? ep.location ?? '',
-                        lat:     ep.latitude      ?? null,
-                        lng:     ep.longitude     ?? null,
+                        name: ep.location_name ?? ep.location ?? '',
+                        address: ep.address ?? ep.location ?? '',
+                        lat: ep.latitude ?? null,
+                        lng: ep.longitude ?? null,
                     }
                     : typeof ep.location === 'object' && ep.location?.address
                         ? ep.location
                         : { name: '', address: '', lat: null, lng: null },
-                category:    ep.category    ?? "",
-                priority:    ep.priority    ?? "MEDIUM",
-                isRepeat:    false,
-                teamId:      ep.team_id    ?? null,
-                viewOnly:    ep.team_id
+                category: ep.category ?? "",
+                priority: ep.priority ?? "MEDIUM",
+                isRepeat: false,
+                teamId: ep.team_id ?? null,
+                viewOnly: ep.team_id
                     ? (teams.find(t => String(t.team_id) === String(ep.team_id))?.role ?? 'VIEWER') === 'VIEWER'
                     : false,
             });
@@ -345,14 +345,14 @@ function App() {
                     : null;
 
                 const body = {
-                    title:       data.title,
-                    start_at:    data.startAt,
-                    end_at:      data.endAt,
-                    description: data.description  || "",
-                    priority:    data.priority     || "MEDIUM",
-                    category:    data.category     || "ETC",
-                    team_id:     data.teamId       || null,
-                    location:    locationObj,
+                    title: data.title,
+                    start_at: data.startAt,
+                    end_at: data.endAt,
+                    description: data.description || "",
+                    priority: data.priority || "MEDIUM",
+                    category: data.category || "ETC",
+                    team_id: data.teamId || null,
+                    location: locationObj,
                 };
                 await API.post('/api/schedules', body);
                 fetchSchedules(teams);
@@ -360,15 +360,15 @@ function App() {
             } else {
                 // ── Todo 생성 (todoController) ───────────────
                 const todoBody = {
-                    content:        data.content,
-                    dueDate:        data.dueDate        || null,
-                    priority:       data.priority       || "MEDIUM",
-                    category:       data.category       || "ETC",
-                    isCarriedOver:  data.isCarriedOver  || false,
-                    isRepeat:       data.isRepeat       || false,
-                    repeatType:     data.repeatType     || null,
+                    content: data.content,
+                    dueDate: data.dueDate || null,
+                    priority: data.priority || "MEDIUM",
+                    category: data.category || "ETC",
+                    isCarriedOver: data.isCarriedOver || false,
+                    isRepeat: data.isRepeat || false,
+                    repeatType: data.repeatType || null,
                     repeatInterval: data.repeatInterval || 1,
-                    repeatEndAt:    data.repeatEndAt    || null,
+                    repeatEndAt: data.repeatEndAt || null,
                 };
 
                 if (data.scope === "team" && data.teamId) {
@@ -393,13 +393,13 @@ function App() {
         try {
             if (data.type === 'schedule') {
                 await API.put(`/api/schedules/${data.id}`, {
-                    title:       data.title,
-                    start_at:    data.startAt,
-                    end_at:      data.endAt,
+                    title: data.title,
+                    start_at: data.start_at || data.startAt,
+                    end_at: data.end_at || data.endAt,
                     description: data.description || "",
-                    priority:    data.priority    || "MEDIUM",
-                    category:    data.category    || "ETC",
-                    location:    (data.location && data.location.address)
+                    priority: data.priority || "MEDIUM",
+                    category: data.category || "ETC",
+                    location: (data.location && data.location.address)
                         ? { name: data.location.name || data.location.address, address: data.location.address, lat: data.location.lat || null, lng: data.location.lng || null }
                         : null,
                 });
@@ -407,17 +407,17 @@ function App() {
             } else {
                 // ── Todo 수정 ────────────────────────────────────────────
                 const baseBody = {
-                    content:       data.content,
-                    dueDate:       data.dueDate       || null,
-                    priority:      data.priority      || "MEDIUM",
-                    category:      data.category      || "ETC",
+                    content: data.content,
+                    dueDate: data.dueDate || null,
+                    priority: data.priority || "MEDIUM",
+                    category: data.category || "ETC",
                     isCarriedOver: data.isCarriedOver ?? false,
-                    isDone:        data.isDone        ?? false,
-                    isRepeat:      data.isRepeat      ?? false,
-                    repeatType:    data.repeatType    || null,
-                    repeatInterval:data.repeatInterval || 1,
-                    repeatEndAt:   data.repeatEndAt   || null,
-                    assignBy:      data.assignBy      || null,
+                    isDone: data.isDone ?? false,
+                    isRepeat: data.isRepeat ?? false,
+                    repeatType: data.repeatType || null,
+                    repeatInterval: data.repeatInterval || 1,
+                    repeatEndAt: data.repeatEndAt || null,
+                    assignBy: data.assignBy || null,
                 };
 
                 // editScope=rebuild: 반복 설정이 있으면 항상 재생성
@@ -432,16 +432,16 @@ function App() {
 
                     // 2) 새 설정으로 재생성
                     const createBody = {
-                        content:        data.content,
-                        dueDate:        data.dueDate       || null,
-                        priority:       data.priority      || "MEDIUM",
-                        category:       data.category      || "ETC",
-                        isCarriedOver:  data.isCarriedOver ?? false,
-                        isRepeat:       data.isRepeat      ?? false,
-                        repeatType:     data.repeatType    || null,
+                        content: data.content,
+                        dueDate: data.dueDate || null,
+                        priority: data.priority || "MEDIUM",
+                        category: data.category || "ETC",
+                        isCarriedOver: data.isCarriedOver ?? false,
+                        isRepeat: data.isRepeat ?? false,
+                        repeatType: data.repeatType || null,
                         repeatInterval: data.repeatInterval || 1,
-                        repeatEndAt:    data.repeatEndAt   || null,
-                        assignBy:       data.assignBy      || null,
+                        repeatEndAt: data.repeatEndAt || null,
+                        assignBy: data.assignBy || null,
                     };
 
                     if (data.scope === "team" && data.teamId) {
@@ -569,49 +569,49 @@ function App() {
 
         if (eventType === 'todo') {
             const borderColor = eventInfo.event.borderColor;
-            const prioLabel   = PRIORITY_LABEL[priority] ?? '';
+            const prioLabel = PRIORITY_LABEL[priority] ?? '';
             const prioTextCol = PRIORITY_TEXT_COLOR[priority] ?? '#555';
 
             return (
                 <div style={{
-                    display:        'flex',
-                    alignItems:     'center',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap:            4,
-                    padding:        '1px 4px 1px 5px',
-                    borderRadius:   4,
-                    fontSize:       11,
-                    lineHeight:     1.4,
-                    overflow:       'hidden',
-                    cursor:         'pointer',
-                    background:     eventInfo.event.backgroundColor,
-                    borderLeft:     `3px solid ${borderColor}`,
-                    color:          isDone ? '#aaa' : '#333',
+                    gap: 4,
+                    padding: '1px 4px 1px 5px',
+                    borderRadius: 4,
+                    fontSize: 11,
+                    lineHeight: 1.4,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    background: eventInfo.event.backgroundColor,
+                    borderLeft: `3px solid ${borderColor}`,
+                    color: isDone ? '#aaa' : '#333',
                     textDecoration: isDone ? 'line-through' : 'none',
-                    width:          '100%',
-                    boxSizing:      'border-box',
+                    width: '100%',
+                    boxSizing: 'border-box',
                 }}>
                     {/* 왼쪽: 체크박스 + 제목 */}
-                    <div style={{ display:'flex', alignItems:'center', gap:4, overflow:'hidden', flex:1, minWidth:0 }}>
-            <span style={{ fontSize: 10, flexShrink: 0, color: borderColor }}>
-              {isDone ? '☑' : '☐'}
-            </span>
-                        <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-              {eventInfo.event.title}
-            </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 10, flexShrink: 0, color: borderColor }}>
+                            {isDone ? '☑' : '☐'}
+                        </span>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {eventInfo.event.title}
+                        </span>
                     </div>
                     {/* 오른쪽: 강도 텍스트 */}
                     {prioLabel && (
                         <span style={{
-                            flexShrink:  0,
-                            fontSize:    9,
-                            fontWeight:  600,
-                            color:       isDone ? '#bbb' : prioTextCol,
+                            flexShrink: 0,
+                            fontSize: 9,
+                            fontWeight: 600,
+                            color: isDone ? '#bbb' : prioTextCol,
                             letterSpacing: '0.02em',
-                            marginLeft:  2,
+                            marginLeft: 2,
                         }}>
-              {prioLabel}
-            </span>
+                            {prioLabel}
+                        </span>
                     )}
                 </div>
             );
@@ -620,25 +620,25 @@ function App() {
         // 일반 일정 (pill 스타일)
         return (
             <div style={{
-                display:      'flex',
-                alignItems:   'center',
-                gap:          4,
-                padding:      '2px 6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '2px 6px',
                 borderRadius: 4,
-                fontSize:     11,
-                lineHeight:   1.3,
-                overflow:     'hidden',
-                width:        '100%',
-                boxSizing:    'border-box',
-                background:   eventInfo.event.backgroundColor,
-                color:        eventInfo.event.textColor ?? '#fff',
+                fontSize: 11,
+                lineHeight: 1.3,
+                overflow: 'hidden',
+                width: '100%',
+                boxSizing: 'border-box',
+                background: eventInfo.event.backgroundColor,
+                color: eventInfo.event.textColor ?? '#fff',
             }}>
                 {eventInfo.timeText && (
                     <span style={{ flexShrink: 0, opacity: 0.85 }}>{eventInfo.timeText}</span>
                 )}
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {eventInfo.event.title}
-        </span>
+                    {eventInfo.event.title}
+                </span>
             </div>
         );
     };
@@ -657,7 +657,7 @@ function App() {
                         <ChevronRight size={16} className="cursor-pointer" onClick={handleMiniNext} />
                     </div>
                     <div className="mini-grid">
-                        {['S','M','T','W','T','F','S'].map((d, i) => (
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                             <div key={`${d}-${i}`} className="mini-day-label">{d}</div>
                         ))}
                         {renderMiniDays()}
@@ -680,8 +680,8 @@ function App() {
                     {isGroupOpen && (
                         <div className="category-list">
                             {teams.map((team) => {
-                                const checked  = filters.teams[String(team.team_id)] || false;
-                                const color    = team.team_color ?? '#4a80c4';
+                                const checked = filters.teams[String(team.team_id)] || false;
+                                const color = team.team_color ?? '#4a80c4';
                                 const isHovered = hoveredTeamId === team.team_id;
                                 return (
                                     <div
@@ -703,48 +703,48 @@ function App() {
                                     >
                                         {/* 커스텀 체크박스 */}
                                         <span style={{
-                                            display:        'inline-flex',
-                                            alignItems:     'center',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
                                             justifyContent: 'center',
-                                            width:          16,
-                                            height:         16,
-                                            borderRadius:   4,
-                                            border:         `2px solid ${checked ? color : '#ccc'}`,
-                                            background:     checked ? color : '#fff',
-                                            flexShrink:     0,
-                                            transition:     'all 0.15s',
+                                            width: 16,
+                                            height: 16,
+                                            borderRadius: 4,
+                                            border: `2px solid ${checked ? color : '#ccc'}`,
+                                            background: checked ? color : '#fff',
+                                            flexShrink: 0,
+                                            transition: 'all 0.15s',
                                         }}>
-                      {checked && (
-                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                              <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                      )}
-                    </span>
+                                            {checked && (
+                                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                                    <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            )}
+                                        </span>
                                         <span style={{ color: checked ? '#2d2d2d' : '#9ca3af', transition: 'color 0.15s', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {team.team_name}
-                    </span>
+                                            {team.team_name}
+                                        </span>
                                         {/* 수정: OWNER/EDITOR만, 삭제: OWNER만 */}
                                         {(team.role === 'OWNER' || team.role === 'EDITOR') && (
-                                            <span style={{ display:'flex', gap:1, flexShrink:0, opacity: isHovered ? 1 : 0, transition:'opacity 0.1s' }}>
-                                          <button title="수정" onClick={(e) => handleOpenEditTeam(e, team)}
-                                                  style={{ border:'none', background:'none', cursor:'pointer', padding:'2px 3px', borderRadius:4, display:'flex', alignItems:'center', color:'#1f2937' }}>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                            </svg>
-                                          </button>
+                                            <span style={{ display: 'flex', gap: 1, flexShrink: 0, opacity: isHovered ? 1 : 0, transition: 'opacity 0.1s' }}>
+                                                <button title="수정" onClick={(e) => handleOpenEditTeam(e, team)}
+                                                    style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', color: '#1f2937' }}>
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                    </svg>
+                                                </button>
                                                 {team.role === 'OWNER' && (
                                                     <button title="삭제" onClick={(e) => handleOpenDeleteTeam(e, team)}
-                                                            style={{ border:'none', background:'none', cursor:'pointer', padding:'2px 3px', borderRadius:4, display:'flex', alignItems:'center', color:'#c94f4f' }}>
+                                                        style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', color: '#c94f4f' }}>
                                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                            <polyline points="3 6 5 6 21 6"/>
-                                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                                            <path d="M10 11v6M14 11v6"/>
-                                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                                            <polyline points="3 6 5 6 21 6" />
+                                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                                            <path d="M10 11v6M14 11v6" />
+                                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
                                                         </svg>
                                                     </button>
                                                 )}
-                                        </span>
+                                            </span>
                                         )}
                                     </div>
                                 );
@@ -768,15 +768,15 @@ function App() {
                                 onClick={() => setFilters((prev) => ({ ...prev, personal: !prev.personal }))}
                             >
                                 <span style={{
-                                    display:'inline-flex', alignItems:'center', justifyContent:'center',
-                                    width:16, height:16, borderRadius:4,
-                                    border:`2px solid ${filters.personal ? '#22c55e' : '#ccc'}`,
+                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                    width: 16, height: 16, borderRadius: 4,
+                                    border: `2px solid ${filters.personal ? '#22c55e' : '#ccc'}`,
                                     background: filters.personal ? '#22c55e' : '#fff',
-                                    flexShrink:0, transition:'all 0.15s',
+                                    flexShrink: 0, transition: 'all 0.15s',
                                 }}>
                                     {filters.personal && (
                                         <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                            <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                            <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
                                     )}
                                 </span>
@@ -791,15 +791,15 @@ function App() {
                                 onClick={() => setFilters((prev) => ({ ...prev, personalTodo: !prev.personalTodo }))}
                             >
                                 <span style={{
-                                    display:'inline-flex', alignItems:'center', justifyContent:'center',
-                                    width:16, height:16, borderRadius:4,
-                                    border:`2px solid ${filters.personalTodo ? '#22c55e' : '#ccc'}`,
+                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                    width: 16, height: 16, borderRadius: 4,
+                                    border: `2px solid ${filters.personalTodo ? '#22c55e' : '#ccc'}`,
                                     background: filters.personalTodo ? '#22c55e' : '#fff',
-                                    flexShrink:0, transition:'all 0.15s',
+                                    flexShrink: 0, transition: 'all 0.15s',
                                 }}>
                                     {filters.personalTodo && (
                                         <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                            <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                            <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
                                     )}
                                 </span>
@@ -818,7 +818,7 @@ function App() {
                         <span className={`arrow ${isStatsOpen ? 'up' : 'down'}`}>▲</span>
                     </div>
                     {isStatsOpen && (
-                        <div style={{ padding:'10px 12px', fontSize:13, color:'#6b7280' }}>
+                        <div style={{ padding: '10px 12px', fontSize: 13, color: '#6b7280' }}>
                             준비 중입니다.
                         </div>
                     )}
@@ -836,57 +836,57 @@ function App() {
                     <button
                         title="마이페이지"
                         onClick={() => navigate('/mypage')}
-                        style={{ width:44, height:44, borderRadius:'50%', background:'#e5e7eb', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#374151', flexShrink:0, transition:'background 0.15s' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background='#d1d5db'}
-                        onMouseLeave={(e) => e.currentTarget.style.background='#e5e7eb'}
+                        style={{ width: 44, height: 44, borderRadius: '50%', background: '#e5e7eb', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', flexShrink: 0, transition: 'background 0.15s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#d1d5db'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#e5e7eb'}
                     >
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
                         </svg>
                     </button>
                 </header>
 
-                <div className="calendar-wrapper" style={{ position:'relative' }}>
+                <div className="calendar-wrapper" style={{ position: 'relative' }}>
                     {/* 달력 오른쪽 상단: 그룹생성·관리 + 뷰 전환 */}
-                    <div style={{ position:'absolute', top:0, right:0, zIndex:5, display:'flex', alignItems:'center', gap:6 }}>
+                    <div style={{ position: 'absolute', top: 0, right: 0, zIndex: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
                         {/* 그룹생성 */}
                         <button
                             onClick={() => setIsGroupModalOpen(true)}
-                            style={{ padding:'5px 12px', borderRadius:7, border:'1px solid #e5e7eb', background:'#fff', fontSize:12, color:'#374151', cursor:'pointer', fontWeight:500, display:'flex', alignItems:'center', gap:4, boxShadow:'0 1px 2px rgba(0,0,0,0.06)' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background='#f9fafb'}
-                            onMouseLeave={(e) => e.currentTarget.style.background='#fff'}
+                            style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #e5e7eb', background: '#fff', fontSize: 12, color: '#374151', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
                         >
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                             그룹 생성
                         </button>
                         {/* 그룹관리 */}
                         <button
                             onClick={() => setIsTeamManageOpen(true)}
-                            style={{ padding:'5px 12px', borderRadius:7, border:'1px solid #e5e7eb', background:'#fff', fontSize:12, color:'#374151', cursor:'pointer', fontWeight:500, boxShadow:'0 1px 2px rgba(0,0,0,0.06)' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background='#f9fafb'}
-                            onMouseLeave={(e) => e.currentTarget.style.background='#fff'}
+                            style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #e5e7eb', background: '#fff', fontSize: 12, color: '#374151', cursor: 'pointer', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
                         >
                             그룹 관리
                         </button>
                         {/* 구분선 */}
-                        <div style={{ width:1, height:20, background:'#e5e7eb' }} />
+                        <div style={{ width: 1, height: 20, background: '#e5e7eb' }} />
                         {/* 일간/주간/월간 */}
-                        <div style={{ display:'flex', gap:2, background:'#f1f3f4', borderRadius:8, padding:3 }}>
+                        <div style={{ display: 'flex', gap: 2, background: '#f1f3f4', borderRadius: 8, padding: 3 }}>
                             {[
-                                { view:'timeGridDay',  label:'일간' },
-                                { view:'timeGridWeek', label:'주간' },
-                                { view:'dayGridMonth', label:'월간' },
+                                { view: 'timeGridDay', label: '일간' },
+                                { view: 'timeGridWeek', label: '주간' },
+                                { view: 'dayGridMonth', label: '월간' },
                             ].map(({ view, label }) => (
                                 <button
                                     key={view}
                                     onClick={() => { calendarRef.current.getApi().changeView(view); setCurrentView(view); }}
                                     style={{
-                                        padding:'5px 14px', borderRadius:6, border:'none', cursor:'pointer',
-                                        fontSize:13, fontWeight: currentView === view ? 600 : 400,
+                                        padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                                        fontSize: 13, fontWeight: currentView === view ? 600 : 400,
                                         background: currentView === view ? '#fff' : 'transparent',
-                                        color:      currentView === view ? '#3c4043' : '#5f6368',
-                                        boxShadow:  currentView === view ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
+                                        color: currentView === view ? '#3c4043' : '#5f6368',
+                                        boxShadow: currentView === view ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
                                         transition: 'all 0.15s',
                                     }}
                                 >{label}</button>
@@ -975,54 +975,54 @@ function App() {
             {/* ── 그룹 생성 모달 ── */}
             {isGroupModalOpen && (
                 <div style={{
-                    position:'fixed', inset:0, background:'rgba(0,0,0,0.35)',
-                    display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000,
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
                 }}
-                     onClick={(e) => e.target === e.currentTarget && setIsGroupModalOpen(false)}
+                    onClick={(e) => e.target === e.currentTarget && setIsGroupModalOpen(false)}
                 >
                     <div style={{
-                        background:'#fff', borderRadius:12, width:400,
-                        boxShadow:'0 4px 24px rgba(0,0,0,0.14)', padding:'24px 24px 20px',
+                        background: '#fff', borderRadius: 12, width: 400,
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.14)', padding: '24px 24px 20px',
                     }}>
                         {/* 헤더 */}
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-                            <span style={{ fontSize:16, fontWeight:600, color:'#2d2d2d' }}>👥 새 그룹 추가</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <span style={{ fontSize: 16, fontWeight: 600, color: '#2d2d2d' }}>👥 새 그룹 추가</span>
                             <button onClick={() => setIsGroupModalOpen(false)} style={{
-                                background:'none', border:'none', cursor:'pointer', fontSize:18, color:'#9ca3af', lineHeight:1,
+                                background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#9ca3af', lineHeight: 1,
                             }}>×</button>
                         </div>
 
                         {/* 그룹 이름 */}
-                        <label style={{ fontSize:12, color:'#6b7280', fontWeight:500 }}>그룹 이름</label>
+                        <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>그룹 이름</label>
                         <input
                             value={newGroupName}
                             onChange={(e) => setNewGroupName(e.target.value)}
                             placeholder="예: 개발팀, 스터디 모임"
                             style={{
-                                display:'block', width:'100%', boxSizing:'border-box',
-                                marginTop:6, marginBottom:20,
-                                padding:'9px 12px', borderRadius:8,
-                                border:'1px solid rgba(0,0,0,0.12)',
-                                fontSize:14, outline:'none',
+                                display: 'block', width: '100%', boxSizing: 'border-box',
+                                marginTop: 6, marginBottom: 20,
+                                padding: '9px 12px', borderRadius: 8,
+                                border: '1px solid rgba(0,0,0,0.12)',
+                                fontSize: 14, outline: 'none',
                             }}
                             onKeyDown={(e) => e.key === 'Enter' && handleSaveGroup()}
                         />
 
                         {/* 팀 색상 선택 */}
-                        <label style={{ fontSize:12, color:'#6b7280', fontWeight:500 }}>팀 색상</label>
-                        <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:8, marginBottom:6 }}>
+                        <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>팀 색상</label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, marginBottom: 6 }}>
                             {TEAM_COLOR_PALETTE.map((color) => (
                                 <button
                                     key={color}
                                     onClick={() => setNewGroupColor(color)}
                                     title={color}
                                     style={{
-                                        width:28, height:28, borderRadius:'50%',
-                                        background:color, border:'none', cursor:'pointer',
+                                        width: 28, height: 28, borderRadius: '50%',
+                                        background: color, border: 'none', cursor: 'pointer',
                                         outline: newGroupColor === color ? `3px solid ${color}` : '3px solid transparent',
-                                        outlineOffset:2,
+                                        outlineOffset: 2,
                                         transform: newGroupColor === color ? 'scale(1.15)' : 'scale(1)',
-                                        transition:'transform 0.1s',
+                                        transition: 'transform 0.1s',
                                         boxShadow: newGroupColor === color ? `0 0 0 2px #fff, 0 0 0 4px ${color}` : 'none',
                                     }}
                                 />
@@ -1030,10 +1030,10 @@ function App() {
                         </div>
 
                         {/* 직접 입력 */}
-                        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:10, marginBottom:20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, marginBottom: 20 }}>
                             <div style={{
-                                width:28, height:28, borderRadius:'50%',
-                                background:newGroupColor, border:'1px solid rgba(0,0,0,0.1)', flexShrink:0,
+                                width: 28, height: 28, borderRadius: '50%',
+                                background: newGroupColor, border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0,
                             }} />
                             <input
                                 type="text"
@@ -1045,36 +1045,36 @@ function App() {
                                 placeholder="#hex"
                                 maxLength={7}
                                 style={{
-                                    flex:1, padding:'6px 10px', borderRadius:6,
-                                    border:'1px solid rgba(0,0,0,0.12)',
-                                    fontSize:13, outline:'none', letterSpacing:'0.05em',
-                                    fontFamily:'monospace',
+                                    flex: 1, padding: '6px 10px', borderRadius: 6,
+                                    border: '1px solid rgba(0,0,0,0.12)',
+                                    fontSize: 13, outline: 'none', letterSpacing: '0.05em',
+                                    fontFamily: 'monospace',
                                 }}
                             />
                             <input
                                 type="color"
                                 value={newGroupColor.length === 7 ? newGroupColor : '#4a80c4'}
                                 onChange={(e) => setNewGroupColor(e.target.value)}
-                                style={{ width:36, height:36, borderRadius:6, border:'1px solid rgba(0,0,0,0.12)', cursor:'pointer', padding:2 }}
+                                style={{ width: 36, height: 36, borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)', cursor: 'pointer', padding: 2 }}
                                 title="색상 직접 선택"
                             />
                         </div>
 
                         {/* 버튼 */}
-                        <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                             <button
                                 onClick={() => setIsGroupModalOpen(false)}
                                 style={{
-                                    padding:'8px 16px', borderRadius:8, border:'1px solid rgba(0,0,0,0.12)',
-                                    background:'none', color:'#6b7280', fontSize:13, cursor:'pointer',
+                                    padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)',
+                                    background: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer',
                                 }}
                             >취소</button>
                             <button
                                 onClick={handleSaveGroup}
                                 style={{
-                                    padding:'8px 20px', borderRadius:8, border:'none',
-                                    background:newGroupColor.length === 7 ? newGroupColor : '#4a80c4',
-                                    color:'#fff', fontSize:14, fontWeight:600, cursor:'pointer',
+                                    padding: '8px 20px', borderRadius: 8, border: 'none',
+                                    background: newGroupColor.length === 7 ? newGroupColor : '#4a80c4',
+                                    color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
                                 }}
                             >저장</button>
                         </div>
@@ -1085,39 +1085,39 @@ function App() {
             {/* ── 팀 수정 모달 ── */}
             {isEditTeamModalOpen && editingTeam && (
                 <div style={{
-                    position:'fixed', inset:0, background:'rgba(0,0,0,0.35)',
-                    display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000,
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
                 }}
-                     onClick={(e) => e.target === e.currentTarget && setIsEditTeamModalOpen(false)}
+                    onClick={(e) => e.target === e.currentTarget && setIsEditTeamModalOpen(false)}
                 >
                     <div style={{
-                        background:'#fff', borderRadius:12, width:400,
-                        boxShadow:'0 4px 24px rgba(0,0,0,0.14)', padding:'24px 24px 20px',
+                        background: '#fff', borderRadius: 12, width: 400,
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.14)', padding: '24px 24px 20px',
                     }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-                            <span style={{ fontSize:16, fontWeight:600, color:'#2d2d2d' }}>✏️ 그룹 수정</span>
-                            <button onClick={() => setIsEditTeamModalOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'#9ca3af', lineHeight:1 }}>×</button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <span style={{ fontSize: 16, fontWeight: 600, color: '#2d2d2d' }}>✏️ 그룹 수정</span>
+                            <button onClick={() => setIsEditTeamModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#9ca3af', lineHeight: 1 }}>×</button>
                         </div>
 
-                        <label style={{ fontSize:12, color:'#6b7280', fontWeight:500 }}>그룹 이름</label>
+                        <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>그룹 이름</label>
                         <input
                             value={editTeamName}
                             onChange={(e) => setEditTeamName(e.target.value)}
-                            style={{ display:'block', width:'100%', boxSizing:'border-box', marginTop:6, marginBottom:20, padding:'9px 12px', borderRadius:8, border:'1px solid rgba(0,0,0,0.12)', fontSize:14, outline:'none' }}
+                            style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 6, marginBottom: 20, padding: '9px 12px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', fontSize: 14, outline: 'none' }}
                             onKeyDown={(e) => e.key === 'Enter' && handleSaveEditTeam()}
                         />
 
-                        <label style={{ fontSize:12, color:'#6b7280', fontWeight:500 }}>팀 색상</label>
-                        <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:8, marginBottom:6 }}>
+                        <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>팀 색상</label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, marginBottom: 6 }}>
                             {TEAM_COLOR_PALETTE.map((color) => (
                                 <button
                                     key={color}
                                     onClick={() => setEditTeamColor(color)}
                                     title={color}
                                     style={{
-                                        width:28, height:28, borderRadius:'50%',
-                                        background:color, border:'none', cursor:'pointer',
-                                        transition:'transform 0.1s',
+                                        width: 28, height: 28, borderRadius: '50%',
+                                        background: color, border: 'none', cursor: 'pointer',
+                                        transition: 'transform 0.1s',
                                         transform: editTeamColor === color ? 'scale(1.15)' : 'scale(1)',
                                         boxShadow: editTeamColor === color ? `0 0 0 2px #fff, 0 0 0 4px ${color}` : 'none',
                                     }}
@@ -1125,27 +1125,27 @@ function App() {
                             ))}
                         </div>
 
-                        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:10, marginBottom:20 }}>
-                            <div style={{ width:28, height:28, borderRadius:'50%', background:editTeamColor, border:'1px solid rgba(0,0,0,0.1)', flexShrink:0 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, marginBottom: 20 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: editTeamColor, border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }} />
                             <input
                                 type="text"
                                 value={editTeamColor}
                                 onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setEditTeamColor(v); }}
                                 placeholder="#hex"
                                 maxLength={7}
-                                style={{ flex:1, padding:'6px 10px', borderRadius:6, border:'1px solid rgba(0,0,0,0.12)', fontSize:13, outline:'none', letterSpacing:'0.05em', fontFamily:'monospace' }}
+                                style={{ flex: 1, padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)', fontSize: 13, outline: 'none', letterSpacing: '0.05em', fontFamily: 'monospace' }}
                             />
                             <input
                                 type="color"
                                 value={editTeamColor.length === 7 ? editTeamColor : '#4a80c4'}
                                 onChange={(e) => setEditTeamColor(e.target.value)}
-                                style={{ width:36, height:36, borderRadius:6, border:'1px solid rgba(0,0,0,0.12)', cursor:'pointer', padding:2 }}
+                                style={{ width: 36, height: 36, borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)', cursor: 'pointer', padding: 2 }}
                             />
                         </div>
 
-                        <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
-                            <button onClick={() => setIsEditTeamModalOpen(false)} style={{ padding:'8px 16px', borderRadius:8, border:'1px solid rgba(0,0,0,0.12)', background:'none', color:'#6b7280', fontSize:13, cursor:'pointer' }}>취소</button>
-                            <button onClick={handleSaveEditTeam} style={{ padding:'8px 20px', borderRadius:8, border:'none', background: editTeamColor.length === 7 ? editTeamColor : '#4a80c4', color:'#fff', fontSize:14, fontWeight:600, cursor:'pointer' }}>저장</button>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                            <button onClick={() => setIsEditTeamModalOpen(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>취소</button>
+                            <button onClick={handleSaveEditTeam} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: editTeamColor.length === 7 ? editTeamColor : '#4a80c4', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>저장</button>
                         </div>
                     </div>
                 </div>
@@ -1154,31 +1154,31 @@ function App() {
             {/* ── 팀 삭제 확인 모달 ── */}
             {isDeleteTeamModalOpen && deletingTeam && (
                 <div style={{
-                    position:'fixed', inset:0, background:'rgba(0,0,0,0.35)',
-                    display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000,
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
                 }}
-                     onClick={(e) => e.target === e.currentTarget && setIsDeleteTeamModalOpen(false)}
+                    onClick={(e) => e.target === e.currentTarget && setIsDeleteTeamModalOpen(false)}
                 >
                     <div style={{
-                        background:'#fff', borderRadius:12, width:360,
-                        boxShadow:'0 4px 24px rgba(0,0,0,0.14)', padding:'24px 24px 20px',
+                        background: '#fff', borderRadius: 12, width: 360,
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.14)', padding: '24px 24px 20px',
                     }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-                            <span style={{ fontSize:16, fontWeight:600, color:'#c94f4f' }}>🗑️ 그룹 삭제</span>
-                            <button onClick={() => setIsDeleteTeamModalOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'#9ca3af', lineHeight:1 }}>×</button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <span style={{ fontSize: 16, fontWeight: 600, color: '#c94f4f' }}>🗑️ 그룹 삭제</span>
+                            <button onClick={() => setIsDeleteTeamModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#9ca3af', lineHeight: 1 }}>×</button>
                         </div>
 
-                        <div style={{ background:'#fff5f5', border:'1px solid #fecaca', borderRadius:8, padding:'12px 14px', marginBottom:20 }}>
-                            <p style={{ margin:0, fontSize:13, color:'#7f1d1d', lineHeight:1.7 }}>
-                                <strong style={{ color:'#991b1b' }}>{deletingTeam.team_name}</strong>을 삭제하면<br/>
-                                소속된 <strong style={{ color:'#991b1b' }}>모든 일정·할일</strong>도 함께 삭제됩니다.<br/>
+                        <div style={{ background: '#fff5f5', border: '1px solid #fecaca', borderRadius: 8, padding: '12px 14px', marginBottom: 20 }}>
+                            <p style={{ margin: 0, fontSize: 13, color: '#7f1d1d', lineHeight: 1.7 }}>
+                                <strong style={{ color: '#991b1b' }}>{deletingTeam.team_name}</strong>을 삭제하면<br />
+                                소속된 <strong style={{ color: '#991b1b' }}>모든 일정·할일</strong>도 함께 삭제됩니다.<br />
                                 이 작업은 되돌릴 수 없습니다.
                             </p>
                         </div>
 
-                        <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
-                            <button onClick={() => setIsDeleteTeamModalOpen(false)} style={{ padding:'8px 16px', borderRadius:8, border:'1px solid rgba(0,0,0,0.12)', background:'none', color:'#6b7280', fontSize:13, cursor:'pointer' }}>취소</button>
-                            <button onClick={handleConfirmDeleteTeam} style={{ padding:'8px 20px', borderRadius:8, border:'none', background:'#c94f4f', color:'#fff', fontSize:14, fontWeight:600, cursor:'pointer' }}>삭제</button>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                            <button onClick={() => setIsDeleteTeamModalOpen(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>취소</button>
+                            <button onClick={handleConfirmDeleteTeam} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: '#c94f4f', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>삭제</button>
                         </div>
                     </div>
                 </div>

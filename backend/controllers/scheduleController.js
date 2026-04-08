@@ -135,21 +135,75 @@ const createSchedule = async (req, res) => {
 
 //일정 수정
 const editSchedule = async (req, res) => {
-  const { id } = req.params;
-  const scheduleData = { ...req.body, updated_by: req.user.user_id };
+    const { id } = req.params;
+    const connection = await db.getConnection();
 
-  try {
-    const result = await scheduleModel.updateSchedule(id, scheduleData);
+    try {
+        await connection.beginTransaction();
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "수정할 데이터를 찾지 못했습니다." });
+        const {
+            title,
+            description,
+            start_at,
+            end_at,
+            category,
+            priority,
+            location
+        } = req.body;
+
+        let location_id = null;
+
+        if (location && location.address) {
+            const [locResult] = await connection.query(
+                `INSERT INTO locations (location_name, address, latitude, longitude) 
+                 VALUES (?, ?, ?, ?) 
+                 ON DUPLICATE KEY UPDATE 
+                 location_name = VALUES(location_name), 
+                 latitude = VALUES(latitude), 
+                 longitude = VALUES(longitude)`,
+                [location.name || title, location.address, location.lat || null, location.lng || null]
+            );
+            location_id = locResult.insertId || null;
+        }
+
+        const updateSql = `
+            UPDATE schedules 
+            SET title = ?, description = ?, start_at = ?, end_at = ?, 
+                category = ?, priority = ?, location_id = ?, updated_by = ?
+            WHERE sched_id = ?
+        `;
+
+        const [result] = await connection.query(updateSql, [
+            title,
+            description || "",
+            start_at,
+            end_at,
+            category || "ETC",
+            priority || "MEDIUM",
+            location_id,
+            req.user.user_id,
+            id
+        ]);
+
+        if (result.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: "수정할 데이터를 찾지 못했습니다." });
+        }
+
+        await connection.commit();
+        return res.json({ success: true, message: "수정 성공!", id });
+
+    } catch (err) {
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error("Controller 수정 에러:", err);
+        return res.status(500).json({ error: "서버 에러가 발생했습니다.", details: err.message });
+    } finally {
+        if (connection) {
+            connection.release();
+        }
     }
-
-    res.json({ message: "수정 성공!", id });
-  } catch (err) {
-    console.error("Controller 수정 에러:", err);
-    res.status(500).json({ error: "서버 에러" });
-  }
 };
 
 //일정 삭제
