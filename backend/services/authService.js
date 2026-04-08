@@ -97,7 +97,7 @@ exports.login = async (email, password, ip) => {
 };
 
 // 회원가입
-exports.signup = async (name, email, password, profileImage) => {
+exports.signup = async (name, email, password, profileImage, profileEmoji) => {
   if (!name || !email || !password) {
     const error = new Error("입력값을 다시 확인해주세요.");
     error.status = 400;
