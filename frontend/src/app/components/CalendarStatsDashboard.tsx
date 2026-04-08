@@ -4,6 +4,7 @@ import { Calendar, TrendingUp, Clock, CheckCircle2, ArrowRight, Target, ChevronD
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { ScheduleDetailModal } from "./ScheduleDetailModal";
 import { CalendarModal } from "./CalendarModal";
+import axios from "axios"
 
 /* ========================================
    상수 정의
@@ -19,7 +20,6 @@ const CATEGORIES = [
 const DEFAULT_GROUPS = [
   { id: 1, name: "전체 일정", color: "#3b82f6", icon: "📅" },
   { id: 2, name: "개인 일정", color: "#10b981", icon: "👤" },
-  { id: 10, name: "개발팀 (예시)", color: "#f59e0b", icon: "👥" } // 백엔드 연동 전 임시 팀 버튼
 ];
 
 const PERIOD_LABELS = {
@@ -71,42 +71,54 @@ export function CalendarStatsDashboard() {
      백엔드 API 연동 (포트 3001)
   ---------------------------------------- */
   useEffect(() => {
-    const today = new Date();
-    let start = format(today, "yyyy-MM-dd");
-    let end = format(today, "yyyy-MM-dd");
+  const today = new Date();
+  let start = format(today, "yyyy-MM-dd");
+  let end = format(today, "yyyy-MM-dd");
 
-    if (period === "weekly") {
-      start = format(startOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
-      end = format(endOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
-    } else if (period === "monthly") {
-      start = format(startOfMonth(today), "yyyy-MM-dd");
-      end = format(endOfMonth(today), "yyyy-MM-dd");
-    }
+  if (period === "weekly") {
+    start = format(startOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
+    end = format(endOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  } else if (period === "monthly") {
+    start = format(startOfMonth(today), "yyyy-MM-dd");
+    end = format(endOfMonth(today), "yyyy-MM-dd");
+  }
 
-    const userId = localStorage.getItem("userId") || 1; 
-    let filterType = "all";
-    let teamParam = "";
+  // 로컬스토리지에 userId가 없으면 DB에 넣은 1번을 강제로 사용
+  const userId = localStorage.getItem("userId") || 1; 
+  let filterType = "all";
+  let teamParam = "";
 
-    if (selectedGroup.id === 2) {
-      filterType = "personal"; 
-    } else if (selectedGroup.id > 2) {
-      filterType = "team";
-      teamParam = `&teamId=${selectedGroup.id}`;
-    }
+  if (selectedGroup.id === 2) {
+    filterType = "personal"; 
+  } else if (selectedGroup.id > 2) {
+    filterType = "team";
+    teamParam = `&teamId=${selectedGroup.id}`;
+  }
 
-    // 통계 API 호출 (응답 형식: { success, data: { scheduleData, routineData, detailedSchedules } })
-    fetch(`http://localhost:3001/api/stats?userId=${userId}&filterType=${filterType}${teamParam}&startDate=${start}&endDate=${end}`)
-      .then(res => res.json())
-      .then(response => {
-        if(response.success) {
-          const payload = response.data || {};
-          setScheduleData(payload.scheduleData || []);
-          setRoutineData(payload.routineData || []);
-          setDetailedSchedules(payload.detailedSchedules || { completed: {}, carriedOver: {} });
-        }
-      })
-      .catch(err => console.error("Data fetch error:", err));
-  }, [period, selectedGroup]);
+  const url = `http://localhost:3001/api/stats?userId=${userId}&filterType=${filterType}${teamParam}&startDate=${start}&endDate=${end}`;
+  console.log("요청 URL:", url); // 브라우저 주소창에 직접 쳐서 데이터 나오는지 확인용
+
+  fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error("네트워크 응답 에러");
+      return res.json();
+    })
+    .then(response => {
+      console.log("서버 응답 전체:", response); // 데이터 구조 확인용! 중요!
+
+      if(response.success && response.data) {
+        const payload = response.data;
+        
+        // 데이터가 비어있어도 []를 넣어 렌더링 에러 방지
+        setScheduleData(payload.scheduleData || []);
+        setRoutineData(payload.routineData || []);
+        
+        // detailedSchedules 구조가 {completed: {...}, carriedOver: {...}} 인지 확인
+        setDetailedSchedules(payload.detailedSchedules || { completed: {}, carriedOver: {} });
+      }
+    })
+    .catch(err => console.error("데이터 패칭 실패:", err));
+}, [period, selectedGroup]);
 
   /* ----------------------------------------
      데이터 가공 및 메모이제이션

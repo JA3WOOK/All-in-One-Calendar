@@ -1,19 +1,10 @@
 const db = require("../config/db");
+const { buildCondition } = require("../utils/queryBuilder");
 
 // 카테고리 한글 변환 헬퍼 함수
 const mapCategoryToKorean = (category) => {
   const mapper = { 'WORK': '업무', 'EXERCISE': '운동', 'SELF_DEV': '공부', 'HOBBY': '개인', 'ETC': '기타' };
   return mapper[category] || '기타';
-};
-
-// 조건문 생성 헬퍼 함수
-const buildCondition = (filterType, userId, teamId) => {
-  if (filterType === 'personal') return { clause: 'user_id = ? AND team_id IS NULL', params: [userId] };
-  if (filterType === 'team') return { clause: 'team_id = ?', params: [teamId] };
-  return { 
-    clause: '(user_id = ? OR team_id IN (SELECT team_id FROM team_members WHERE user_id = ? AND is_deleted = FALSE))', 
-    params: [userId, userId] 
-  };
 };
 
 // 1. 카테고리별 달성률 통계 (todos 기반)

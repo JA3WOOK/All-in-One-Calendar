@@ -35,12 +35,12 @@ const generateTimeSlots = () => {
 
 // 요일 생성 (주간용)
 const weekDays = ["월", "화", "수", "목", "금", "토", "일"];
-const weekDates = ["03/25", "03/26", "03/27", "03/28", "03/29", "03/30", "03/31"];
+const weekDates = ["04/07", "04/08", "04/09", "04/10", "04/11", "04/12", "04/13"];
 
-// 월간 날짜 생성
+// 월간 날짜 생성 (4월은 30일까지)
 const generateMonthDays = () => {
   const days = [];
-  for (let i = 1; i <= 31; i++) {
+  for (let i = 1; i <= 30; i++) {
     days.push(i);
   }
   return days;
@@ -169,9 +169,11 @@ export function CalendarModal({
             {day}
           </div>
         ))}
-        {/* 3월 1일이 월요일부터 시작한다고 가정 */}
+        {/* 4월 1일이 화요일부터 시작 (월요일 빈 칸 1개) */}
+        {/* 빈 칸 추가 */}
+        <div className="border border-transparent p-2 min-h-[80px]" />
         {days.map((day) => {
-          const dateStr = `2026-03-${day.toString().padStart(2, "0")}`;
+          const dateStr = `2026-04-${day.toString().padStart(2, "0")}`;
           const daySchedules = groupedSchedules[dateStr] || [];
           const hasSchedules = daySchedules.length > 0;
           
@@ -228,7 +230,7 @@ export function CalendarModal({
               <h2 className="text-2xl font-bold text-white">
                 {periodLabels[period]} 캘린더
               </h2>
-              <p className="text-blue-100 mt-1">2026년 3월</p>
+              <p className="text-blue-100 mt-1">2026년 4월</p>
             </div>
             <button
               onClick={onClose}

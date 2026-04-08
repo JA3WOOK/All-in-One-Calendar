@@ -6,6 +6,7 @@ const pool    = require("./config/db");
 require("dotenv").config();
 
 // ── 라우터 / 모델 import ──────────────────────────
+/*
 const todoModel      = require("./models/todoModel");
 const todoRoutes     = require("./routes/todoRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
@@ -13,7 +14,7 @@ const teamRoutes     = require("./routes/teamRoutes");
 const inviteRoutes   = require("./routes/inviteRoutes");
 const memberRouter   = require("./routes/memberRoutes");
 const authRoutes     = require("./routes/authRoutes");
-const userRoutes     = require("./routes/userRoutes");
+const userRoutes     = require("./routes/userRoutes");*/
 
 // ── Express 앱 생성 ───────────────────────────────
 const app = express();
@@ -28,7 +29,7 @@ app.use(express.json());
 
 // ── 라우터 연결 ───────────────────────────────────
 app.get("/", (req, res) => res.send("서버 실행 중"));
-
+/*
 app.use("/api/schedules",   scheduleRoutes);
 app.use("/api/teams",       teamRoutes);
 app.use("/api/todos",       todoRoutes);
@@ -36,7 +37,7 @@ app.use("/api/invitations", inviteRoutes);
 app.use("/api/members",     memberRouter);
 app.use("/api/auth",        authRoutes);
 app.use("/users",           userRoutes);
-
+*/
 app.use("/api/stats",       require("./routes/statsRoutes"));// 통계 추가
 
 // ── 404 처리 ──────────────────────────────────────
@@ -61,6 +62,7 @@ app.listen(PORT, () => {
 });
 
 // ── 자동 미루기 ───────────────────────────────────
+/*
 async function runMissedCarryOver() {
     try {
         const count = await todoModel.carryOverTodos();
@@ -80,3 +82,4 @@ cron.schedule("0 0 * * *", async () => {
         console.error("[자동 미루기 오류]", err);
     }
 }, { timezone: "Asia/Seoul" });
+*/
