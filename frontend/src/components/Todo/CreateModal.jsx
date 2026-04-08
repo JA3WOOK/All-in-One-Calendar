@@ -509,12 +509,12 @@ function RepeatOptions({ repeatType, setRepeatType, repeatInterval, setRepeatInt
         }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 13, color: MUTED, minWidth: 28 }}>매</span>
+                <input type="number" min={1} max={99} style={{ width: 56, ...s.select, textAlign: "center" }}
+                       value={repeatInterval} onChange={(e) => setRepeatInterval(Number(e.target.value))} />
                 <select style={{ flex: 1, ...s.select }} value={repeatType} onChange={(e) => setRepeatType(e.target.value)}>
                     {REPEAT_TYPES.map((t) => <option key={t} value={t}>{REPEAT_LABELS[t]}</option>)}
                 </select>
-                <input type="number" min={1} max={99} style={{ width: 56, ...s.select, textAlign: "center" }}
-                       value={repeatInterval} onChange={(e) => setRepeatInterval(Number(e.target.value))} />
-                <span style={{ fontSize: 13, color: MUTED }}>회 반복</span>
+                <span style={{ fontSize: 13, color: MUTED }}>마다</span>
             </div>
             <div style={{ height: 1, background: BORDER }} />
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
