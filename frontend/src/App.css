@@ -1,0 +1,266 @@
+/* 전체 레이아웃 */
+.container {
+  display: flex;
+  height: 100vh;
+  padding: 20px;
+  background-color: #ffffff;
+  font-family: 'Pretendard', sans-serif;
+}
+
+/* 좌측 사이드바 */
+.sidebar {
+  width: 280px;
+  border-right: 1px solid #f0f0f0;
+  padding-right: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* 미니 캘린더 카드 */
+.mini-calendar-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.mini-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+}
+
+.mini-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 35px;
+  position: relative;
+  cursor: pointer;
+}
+
+.day-number {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.mini-dot-container {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  height: 4px;
+}
+
+.mini-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+
+.personal-dot { background-color: #73d13d; }
+.team-dot     { background-color: #85a5ff; }
+.study-dot    { background-color: #ffadd2; border: 1px solid #ffadd2; }
+
+/* 카테고리 섹션 */
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-weight: bold;
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px;
+  border-radius: 5px;
+  transition: all 0.2s;
+}
+
+.category-item:hover {
+  background-color: #f0f0f0;
+}
+
+.category-item.inactive {
+  opacity: 0.4;
+}
+
+.category-item.inactive span {
+  text-decoration: line-through;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* 우측 메인 컨텐츠 */
+.main-content {
+  flex: 1;
+  padding-left: 40px;
+  overflow-y: auto;
+}
+
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* 버튼 스타일 */
+.btn-outline {
+  padding: 6px 18px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  padding: 6px 12px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  border-right: 1px solid #e0e0e0;
+}
+
+.toggle-btn.active {
+  background: #333;
+  color: white;
+}
+
+/* FullCalendar 커스텀 */
+.fc-col-header-cell {
+  padding: 12px 0 !important;
+  color: #999 !important;
+  font-weight: 500 !important;
+}
+
+/* 이벤트 기본 스타일 — renderEventContent로 커스텀 렌더링하므로 최소화 */
+.fc-daygrid-event {
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 0 !important;
+  margin-bottom: 2px !important;
+  background: none !important;
+}
+
+.fc-daygrid-event .fc-event-main {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+/* FullCalendar 기본 제목/시간 숨기기 (renderEventContent가 대신 표시) */
+.fc-event-title,
+.fc-event-time {
+  display: none !important;
+}
+
+.fc-daygrid-event-dot {
+  display: none !important;
+}
+
+/* 모달 */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 350px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.modal-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-btns button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+}
+
+.save-btn   { background: #333; color: white; border: none !important; }
+.delete-btn { background: #ff4d4f; color: white; border: none !important; }
+
+/* 공통 */
+.cursor-pointer { cursor: pointer; }
+
+/* 체크박스 초기화 */
+input[type="checkbox"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ddd;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+}
+
+input[type="checkbox"]:checked::after {
+  content: '✔';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 10px;
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 18px;
+  color: #090909;
+}
+
+.arrow.up   { transform: rotate(0deg); }
+.arrow.down { transform: rotate(180deg); }

@@ -7,6 +7,7 @@ import {
   PencilLine,
   Trash2,
   UserRound,
+  CalendarDays,
 } from "lucide-react";
 import { logoutApi } from "../../api/authApi";
 import { deleteMyAccountApi, getMyProfileApi } from "../../api/userApi";
@@ -68,82 +69,95 @@ export default function MyPage() {
 
   if (loading) {
     return (
-      <div className="mypage-shell">
-        <div className="mypage-loading">불러오는 중...</div>
-      </div>
+        <div className="mypage-shell">
+          <div className="mypage-loading">불러오는 중...</div>
+        </div>
     );
   }
 
   return (
-    <div className="mypage-shell">
-      <div className="mypage-card">
-        <div className="mypage-profile-section">
-          <div className="mypage-avatar-wrap">
-            {user.profile_image ? (
-              <img
-                src={user.profile_image}
-                alt="profile"
-                className="mypage-avatar"
-              />
-            ) : (
-              <div className="mypage-avatar fallback">
-                <UserRound size={40} />
+      <div className="mypage-shell">
+        <div className="mypage-card">
+          {/* 캘린더로 돌아가기 */}
+          <div style={{ display:'flex', justifyContent:'flex-start', marginBottom:16 }}>
+            <button
+                onClick={() => navigate('/calendar')}
+                style={{ display:'flex', alignItems:'center', gap:6, border:'none', background:'none', color:'#6b7280', fontSize:14, cursor:'pointer', padding:'4px 0', fontWeight:500 }}
+                onMouseEnter={(e) => e.currentTarget.style.color='#111827'}
+                onMouseLeave={(e) => e.currentTarget.style.color='#6b7280'}
+            >
+              <CalendarDays size={16} />
+              <span>캘린더로 돌아가기</span>
+            </button>
+          </div>
+
+          <div className="mypage-profile-section">
+            <div className="mypage-avatar-wrap">
+              {user.profile_image ? (
+                  <img
+                      src={user.profile_image}
+                      alt="profile"
+                      className="mypage-avatar"
+                  />
+              ) : (
+                  <div className="mypage-avatar fallback">
+                    <UserRound size={40} />
+                  </div>
+              )}
+            </div>
+
+            <h1 className="mypage-name">{user.name || "이름 없음"}</h1>
+            <p className="mypage-email">{user.email || "이메일 없음"}</p>
+          </div>
+
+          <div className="mypage-info-box">
+            <div className="mypage-info-row">
+              <span>전화번호</span>
+              <strong>{user.phone || "등록되지 않음"}</strong>
+            </div>
+            <div className="mypage-info-row">
+              <span>부서</span>
+              <strong>{user.department || "등록되지 않음"}</strong>
+            </div>
+          </div>
+
+          <div className="mypage-menu">
+            <button
+                className="mypage-menu-btn"
+                onClick={() => navigate("/edit-profile")}
+            >
+              <div className="mypage-menu-left">
+                <PencilLine size={17} />
+                <span>정보 수정</span>
               </div>
-            )}
+              <ChevronRight size={17} />
+            </button>
+
+            <button
+                className="mypage-menu-btn"
+                onClick={() => navigate("/change-password")}
+            >
+              <div className="mypage-menu-left">
+                <Lock size={17} />
+                <span>비밀번호 변경</span>
+              </div>
+              <ChevronRight size={17} />
+            </button>
+
+            <button className="mypage-menu-btn" onClick={handleLogout}>
+              <div className="mypage-menu-left">
+                <LogOut size={17} />
+                <span>로그아웃</span>
+              </div>
+              <ChevronRight size={17} />
+            </button>
           </div>
 
-          <h1 className="mypage-name">{user.name || "이름 없음"}</h1>
-          <p className="mypage-email">{user.email || "이메일 없음"}</p>
-        </div>
-
-        <div className="mypage-info-box">
-          <div className="mypage-info-row">
-            <span>전화번호</span>
-            <strong>{user.phone || "등록되지 않음"}</strong>
-          </div>
-          <div className="mypage-info-row">
-            <span>부서</span>
-            <strong>{user.department || "등록되지 않음"}</strong>
-          </div>
-        </div>
-
-        <div className="mypage-menu">
-          <button
-            className="mypage-menu-btn"
-            onClick={() => navigate("/edit-profile")}
-          >
-            <div className="mypage-menu-left">
-              <PencilLine size={17} />
-              <span>정보 수정</span>
-            </div>
-            <ChevronRight size={17} />
-          </button>
-
-          <button
-            className="mypage-menu-btn"
-            onClick={() => navigate("/change-password")}
-          >
-            <div className="mypage-menu-left">
-              <Lock size={17} />
-              <span>비밀번호 변경</span>
-            </div>
-            <ChevronRight size={17} />
-          </button>
-
-          <button className="mypage-menu-btn" onClick={handleLogout}>
-            <div className="mypage-menu-left">
-              <LogOut size={17} />
-              <span>로그아웃</span>
-            </div>
-            <ChevronRight size={17} />
+          <button className="mypage-delete-btn" onClick={handleDeleteAccount}>
+            <Trash2 size={15} />
+            <span>계정 삭제</span>
           </button>
         </div>
-
-        <button className="mypage-delete-btn" onClick={handleDeleteAccount}>
-          <Trash2 size={15} />
-          <span>계정 삭제</span>
-        </button>
       </div>
-    </div>
   );
 }

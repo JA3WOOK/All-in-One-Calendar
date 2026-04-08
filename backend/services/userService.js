@@ -43,8 +43,8 @@ const updateUserProfile = async (userId, data) => {
 // 비밀번호 변경
 const changePassword = async (userId, currentPassword, newPassword) => {
   const [rows] = await db.query(
-    "SELECT password FROM users WHERE user_id = ?",
-    [userId]
+      "SELECT password FROM users WHERE user_id = ?",
+      [userId]
   );
 
   if (rows.length === 0) return null;
@@ -57,8 +57,8 @@ const changePassword = async (userId, currentPassword, newPassword) => {
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   await db.query(
-    "UPDATE users SET password = ? WHERE user_id = ?",
-    [hashedPassword, userId]
+      "UPDATE users SET password = ? WHERE user_id = ?",
+      [hashedPassword, userId]
   );
 
   return true;
@@ -66,21 +66,62 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 
 // 계정 삭제
 const deleteUserById = async (userId) => {
-  const [result] = await db.query(
-    "DELETE FROM users WHERE user_id = ?",
-    [userId]
-  );
+  // FK 제약으로 hard delete 불가 → soft delete (is_deleted = true)
+  // 관련 데이터 정리 후 유저 비활성화
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
 
-  if (result.affectedRows === 0) return null;
+    // 1. 보낸/받은 초대 취소
+    await conn.query(
+        "UPDATE invitations SET status = 'REJECTED' WHERE inviter_id = ? OR invitee_id = ?",
+        [userId, userId]
+    );
 
-  return true;
+    // 2. 팀 멤버 소프트 삭제
+    await conn.query(
+        "UPDATE team_members SET is_deleted = TRUE WHERE user_id = ?",
+        [userId]
+    );
+
+    // 3. refresh token 무효화
+    await conn.query(
+        "UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL",
+        [userId]
+    );
+
+    // 4. 개인 일정/할일 소프트 삭제
+    await conn.query(
+        "UPDATE schedules SET is_deleted = TRUE WHERE user_id = ?",
+        [userId]
+    );
+    await conn.query(
+        "UPDATE todos SET is_deleted = TRUE WHERE user_id = ?",
+        [userId]
+    );
+
+    // 5. 유저 소프트 삭제
+    const [result] = await conn.query(
+        "UPDATE users SET is_deleted = TRUE WHERE user_id = ?",
+        [userId]
+    );
+
+    await conn.commit();
+    if (result.affectedRows === 0) return null;
+    return true;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
 };
 
 // 이메일로 사용자 찾기
 const findUserByEmail = async (email) => {
   const [rows] = await db.query(
-    "SELECT user_id, email, name FROM users WHERE email = ?",
-    [email]
+      "SELECT user_id, email, name FROM users WHERE email = ?",
+      [email]
   );
 
   return rows.length ? rows[0] : null;
@@ -91,8 +132,8 @@ const resetPasswordByEmail = async (email, newPassword) => {
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   const [result] = await db.query(
-    "UPDATE users SET password = ? WHERE email = ?",
-    [hashedPassword, email]
+      "UPDATE users SET password = ? WHERE email = ?",
+      [hashedPassword, email]
   );
 
   if (result.affectedRows === 0) return null;

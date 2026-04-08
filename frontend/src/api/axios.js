@@ -1,3 +1,4 @@
+// 공통 설정 파일
 import axios from "axios";
 
 const api = axios.create({

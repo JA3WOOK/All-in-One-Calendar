@@ -1,7 +1,5 @@
 // routes/userRoutes.js
 
-console.log("userRoutes loaded");
-
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
@@ -16,7 +14,5 @@ router.delete("/me", authMiddleware, userController.deleteMyAccount);
 // 비로그인 상태에서도 가능한 기능
 router.post("/password/reset-request", userController.resetPasswordRequest);
 router.patch("/password/reset", userController.resetPassword);
-
-module.exports = router;
 
 module.exports = router;
