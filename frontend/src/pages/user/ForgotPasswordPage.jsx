@@ -14,6 +14,11 @@ export default function ForgotPasswordPage() {
   const [modalTitle, setModalTitle] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
+
+  // 추가: 이메일 형식 검사 정규식
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+
+
   const handleOpenModal = (title, message) => {
     setModalTitle(title);
     setModalMessage(message);
@@ -31,6 +36,12 @@ export default function ForgotPasswordPage() {
 
     if (!email.trim()) {
       handleOpenModal("알림", "이메일을 입력해주세요.");
+      return;
+    }
+
+    // 추가: 이메일 형식 유효성 검사
+    if (!emailRegex.test(email)) {
+      handleOpenModal("알림", "올바른 이메일 형식을 입력해주세요.");
       return;
     }
 

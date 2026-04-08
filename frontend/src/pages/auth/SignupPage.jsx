@@ -21,9 +21,14 @@ export default function SignupPage() {
   const [selectedProfile, setSelectedProfile] = useState("👤");
   const [uploadedProfiles, setUploadedProfiles] = useState([]);
 
-  // 🔥 추가된 state
   const [imageSrc, setImageSrc] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
+
+  // 추가: 이메일 형식 강화 정규식
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+  // 추가: 비밀번호 영문+숫자 포함, 8자 이상 검사 정규식
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
   const profiles = ["👤", "🧑", "👩", null];
 
@@ -36,7 +41,6 @@ export default function SignupPage() {
     }));
   };
 
- 
   const handleProfileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -53,13 +57,11 @@ export default function SignupPage() {
 
     const preview = URL.createObjectURL(file);
 
-  
     setImageSrc(preview);
     setShowCropModal(true);
 
     e.target.value = "";
   };
-
 
   const handleCropComplete = (croppedImage) => {
     const newImage = {
@@ -74,7 +76,6 @@ export default function SignupPage() {
     setImageSrc(null);
   };
 
-  
   const handleRemoveUploadedProfile = (previewToRemove) => {
     setUploadedProfiles((prev) => {
       const updated = prev.filter((item) => item.preview !== previewToRemove);
@@ -105,9 +106,17 @@ export default function SignupPage() {
       return;
     }
 
-    if (form.password.length < 8) {
+    // 추가: 이메일 형식 강화 검사
+    if (!emailRegex.test(form.email)) {
       setIsError(true);
-      setMessage("비밀번호는 8자 이상 입력해주세요.");
+      setMessage("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    // 수정: 단순 8자 검사 -> 영문/숫자 포함 정규식 검사로 강화
+    if (!passwordRegex.test(form.password)) {
+      setIsError(true);
+      setMessage("비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다.");
       return;
     }
 
@@ -237,8 +246,7 @@ export default function SignupPage() {
                         ×
                       </button>
                     </div>
-                  ) : profile === null ? null : profile
-                  }
+                  ) : profile === null ? null : profile}
                 </div>
               );
             })}
@@ -276,7 +284,7 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
-{/* */}
+
       <div className="auth-right">
         <div className="auth-card">
           <div className="auth-tab">
@@ -309,6 +317,8 @@ export default function SignupPage() {
                 value={form.email}
                 onChange={handleChange}
               />
+              {/* 추가: 이메일 조건 안내 */}
+              <small>올바른 이메일 형식으로 입력해주세요.</small>
             </div>
 
             <div className="form-group">
@@ -321,6 +331,8 @@ export default function SignupPage() {
                 value={form.password}
                 onChange={handleChange}
               />
+              {/* 추가: 비밀번호 조건 안내 */}
+              <small>비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다.</small>
             </div>
 
             <div className="form-group">
