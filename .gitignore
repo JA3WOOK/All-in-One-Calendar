@@ -20,3 +20,7 @@ frontend/dist/
 
 # OS
 .DS_Store
+
+# uploads (파일 업로드)
+backend/uploads/
+
