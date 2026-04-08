@@ -238,9 +238,7 @@ function App() {
         for (let d = 1; d <= lastDay; d++) {
             const currentStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const dayEvents = dbEvents.filter((e) => e.start && e.start.startsWith(currentStr));
-            const hasPersonal = dayEvents.some((e) => !e.extendedProps?.team_id);
-            const hasTeam = dayEvents.some((e) => e.extendedProps?.team_id && !e.extendedProps?.is_study);
-            const hasStudy = dayEvents.some((e) => e.extendedProps?.is_study);
+            const hasHoliday = dayEvents.some((e) => String(e.id || '').startsWith('holiday'));
 
             days.push(
                 <div
@@ -250,9 +248,7 @@ function App() {
                 >
                     <span className="day-number">{d}</span>
                     <div className="mini-dot-container">
-                        {hasPersonal && <span className="mini-dot personal-dot" />}
-                        {hasTeam && <span className="mini-dot team-dot" />}
-                        {hasStudy && <span className="mini-dot study-dot" />}
+                        {hasHoliday && <span className="mini-dot" style={{ background: '#ff4d4f' }} />}
                     </div>
                 </div>
             );
@@ -351,7 +347,7 @@ function App() {
                     description: data.description || "",
                     priority: data.priority || "MEDIUM",
                     category: data.category || "ETC",
-                    team_id: data.teamId || null,
+                    team_id: data.team_id || data.teamId || null,
                     location: locationObj,
                 };
                 await API.post('/api/schedules', body);
