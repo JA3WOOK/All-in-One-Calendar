@@ -346,8 +346,8 @@ function App() {
 
                 const body = {
                     title: data.title,
-                    start_at: data.startAt,
-                    end_at: data.endAt,
+                    start_at: data.start_at || data.startAt,
+                    end_at:   data.end_at   || data.endAt,
                     description: data.description || "",
                     priority: data.priority || "MEDIUM",
                     category: data.category || "ETC",
@@ -361,7 +361,7 @@ function App() {
                 // ── Todo 생성 (todoController) ───────────────
                 const todoBody = {
                     content: data.content,
-                    dueDate: data.dueDate || null,
+                    dueDate: data.due_date || data.dueDate || null,
                     priority: data.priority || "MEDIUM",
                     category: data.category || "ETC",
                     isCarriedOver: data.isCarriedOver || false,
@@ -371,8 +371,8 @@ function App() {
                     repeatEndAt: data.repeatEndAt || null,
                 };
 
-                if (data.scope === "team" && data.teamId) {
-                    await API.post(`/api/todos/team/${data.teamId}`, {
+                if (data.scope === "team" && (data.teamId || data.team_id)) {
+                    await API.post(`/api/todos/team/${data.teamId || data.team_id}`, {
                         ...todoBody,
                         assignBy: data.assignBy || null,
                     });
@@ -408,7 +408,7 @@ function App() {
                 // ── Todo 수정 ────────────────────────────────────────────
                 const baseBody = {
                     content: data.content,
-                    dueDate: data.dueDate || null,
+                    dueDate: data.due_date || data.dueDate || null,
                     priority: data.priority || "MEDIUM",
                     category: data.category || "ETC",
                     isCarriedOver: data.isCarriedOver ?? false,
@@ -433,7 +433,7 @@ function App() {
                     // 2) 새 설정으로 재생성
                     const createBody = {
                         content: data.content,
-                        dueDate: data.dueDate || null,
+                        dueDate: data.due_date || data.dueDate || null,
                         priority: data.priority || "MEDIUM",
                         category: data.category || "ETC",
                         isCarriedOver: data.isCarriedOver ?? false,
@@ -444,7 +444,7 @@ function App() {
                         assignBy: data.assignBy || null,
                     };
 
-                    if (data.scope === "team" && data.teamId) {
+                    if (data.scope === "team" && (data.teamId || data.team_id)) {
                         await API.post(`/api/todos/team/${data.teamId}`, createBody);
                     } else {
                         await API.post("/api/todos/personal", createBody);
@@ -727,7 +727,7 @@ function App() {
                                         {(team.role === 'OWNER' || team.role === 'EDITOR') && (
                                             <span style={{ display: 'flex', gap: 1, flexShrink: 0, opacity: isHovered ? 1 : 0, transition: 'opacity 0.1s' }}>
                                                 <button title="수정" onClick={(e) => handleOpenEditTeam(e, team)}
-                                                    style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', color: '#1f2937' }}>
+                                                        style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', color: '#1f2937' }}>
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -735,7 +735,7 @@ function App() {
                                                 </button>
                                                 {team.role === 'OWNER' && (
                                                     <button title="삭제" onClick={(e) => handleOpenDeleteTeam(e, team)}
-                                                        style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', color: '#c94f4f' }}>
+                                                            style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px 3px', borderRadius: 4, display: 'flex', alignItems: 'center', color: '#c94f4f' }}>
                                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                             <polyline points="3 6 5 6 21 6" />
                                                             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -978,7 +978,7 @@ function App() {
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
                 }}
-                    onClick={(e) => e.target === e.currentTarget && setIsGroupModalOpen(false)}
+                     onClick={(e) => e.target === e.currentTarget && setIsGroupModalOpen(false)}
                 >
                     <div style={{
                         background: '#fff', borderRadius: 12, width: 400,
@@ -1088,7 +1088,7 @@ function App() {
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
                 }}
-                    onClick={(e) => e.target === e.currentTarget && setIsEditTeamModalOpen(false)}
+                     onClick={(e) => e.target === e.currentTarget && setIsEditTeamModalOpen(false)}
                 >
                     <div style={{
                         background: '#fff', borderRadius: 12, width: 400,
@@ -1157,7 +1157,7 @@ function App() {
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
                 }}
-                    onClick={(e) => e.target === e.currentTarget && setIsDeleteTeamModalOpen(false)}
+                     onClick={(e) => e.target === e.currentTarget && setIsDeleteTeamModalOpen(false)}
                 >
                     <div style={{
                         background: '#fff', borderRadius: 12, width: 360,
