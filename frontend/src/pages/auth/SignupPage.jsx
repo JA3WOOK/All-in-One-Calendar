@@ -68,17 +68,34 @@ export default function SignupPage() {
   };
 
   const handleCropComplete = (croppedImage) => {
-    const newImage = {
-      file: imageSrc.file,
-      preview: croppedImage,
-    };
+  console.log("croppedImage:", croppedImage);
 
-    setUploadedProfiles((prev) => [...prev, newImage]);
-    setSelectedProfile(croppedImage);
+  const preview =
+    typeof croppedImage === "string"
+      ? croppedImage
+      : croppedImage?.preview || croppedImage?.url || null;
 
+  const file =
+    croppedImage?.file || imageSrc?.file;
+
+  if (!preview) {
+    setUploadError("크롭된 이미지를 불러오지 못했습니다.");
     setShowCropModal(false);
     setImageSrc(null);
+    return;
+  }
+
+  const newImage = {
+    file,
+    preview,
   };
+
+  setUploadedProfiles((prev) => [...prev, newImage]);
+  setSelectedProfile(preview);
+
+  setShowCropModal(false);
+  setImageSrc(null);
+};
 
   const handleRemoveUploadedProfile = (previewToRemove) => {
     setUploadedProfiles((prev) => {
@@ -371,16 +388,16 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {showCropModal && (
-        <ProfileImageCropModal
-          imageSrc={imageSrc}
-          onClose={() => {
-            setShowCropModal(false);
-            setImageSrc(null);
-          }}
-          onComplete={handleCropComplete}
-        />
-      )}
+            {showCropModal && (
+  <ProfileImageCropModal
+    imageSrc={imageSrc?.preview}
+    onClose={() => {
+      setShowCropModal(false);
+      setImageSrc(null);
+    }}
+    onComplete={handleCropComplete}
+  />
+)}
     </div>
   );
 }
