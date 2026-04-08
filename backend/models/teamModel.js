@@ -54,10 +54,17 @@ exports.create = async (team,created_by) => {
 exports.findMyTeam = async(user_id) => {
     try {
         const sql = `
-            select t.team_id, t.team_name, t.team_color, t.description, tm.role
-            from teams t
-                     inner join team_members tm on t.team_id = tm.team_id
-            where tm.user_id=? and tm.is_deleted=false and t.is_deleted = false
+        select t.team_id,
+        t.team_name, 
+        t.team_color, 
+        t.description, 
+        tm.role,
+        (select count(*) 
+         from team_members tm2 
+         where tm2.team_id = t.team_id and tm2.is_deleted = false) as member_count
+         from teams t
+         inner join team_members tm on t.team_id = tm.team_id
+         where tm.user_id = ? and tm.is_deleted = false and t.is_deleted = false
         `;
         const [rows] = await pool.query(sql, [user_id]);
         return rows;

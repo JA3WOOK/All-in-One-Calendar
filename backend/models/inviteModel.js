@@ -110,7 +110,7 @@ exports.addteam_members = async(team_id,invitee_id) => {
 }
 
 // 내가 보낸 초대 목록 조회
-exports.findSendInviteList = async(inviter_id,team_id) => {
+exports.findSendInviteList = async(team_id) => {
     try {
         const sql = `
             select
@@ -123,12 +123,11 @@ exports.findSendInviteList = async(inviter_id,team_id) => {
             from invitations i
             inner join teams t on i.team_id = t.team_id
             inner join users u on i.invitee_id=u.user_id
-            where i.inviter_id =? 
-            and i.team_id = ?
+            where i.team_id = ? 
             and i.status='PENDING'
             order by i.created_at desc
         `;
-        const [rows] = await pool.query(sql, [inviter_id,team_id]);
+        const [rows] = await pool.query(sql, [team_id]);
         return rows;
     } catch (err) {
         throw err;
