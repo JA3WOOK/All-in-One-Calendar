@@ -1,0 +1,23 @@
+# ── 의존성 및 실행 파일 ──────────────────────────
+node_modules/
+dist/
+package-lock.json
+# (npm 사용 시 package-lock은 올리는 것이 원칙이나, 환경에 따라 제외하기도 함)
+
+# ── 환경 변수 및 보안 ──────────────
+.env
+.env.local
+config/db.config.js
+# (만약 설정 파일에 비밀번호가 직접 적혀있다면 반드시 제외)
+
+# ── 로그 및 데이터베이스 ──────────────────────────
+*.log
+npm-debug.log*
+# 로컬 테스트용 DB 파일 (SQLite 등 사용 시)
+*.db
+*.sqlite
+
+# ── OS 및 에디터 ──────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
