@@ -20,6 +20,7 @@ exports.searchUsers = async (req, res) => {
 
 // 초대장 발송
 exports.sendInvite = async(req,res) => {
+
     const errors = validateInvite(req.body,true);
     if (errors.length) {
         return res.status(400).json({ errors });
