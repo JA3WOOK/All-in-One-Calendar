@@ -14,6 +14,7 @@ import { deleteMyAccountApi, getMyProfileApi } from "../../api/userApi";
 import "./MyPage.css";
 
 const BACKEND_URL = "http://localhost:3001";
+const DEFAULT_PROFILE_IMAGE = "/default-profile.png";
 
 export default function MyPage() {
   const navigate = useNavigate();
@@ -26,17 +27,15 @@ export default function MyPage() {
     profile_image: "",
   });
   const [loading, setLoading] = useState(true);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const result = await getMyProfileApi();
-
-        // 응답이 { success, message, data } 형태일 수도 있고
-        // 그냥 user 객체일 수도 있어서 둘 다 대응
         const userData = result.data ?? result;
-
         setUser(userData);
+        setImgError(false);
       } catch (error) {
         alert(error.response?.data?.message || "프로필 불러오기 실패");
       } finally {
@@ -72,6 +71,19 @@ export default function MyPage() {
     } catch (error) {
       alert(error.response?.data?.message || "회원 탈퇴 실패");
     }
+  };
+
+  const getProfileImageSrc = () => {
+    if (!user.profile_image) return DEFAULT_PROFILE_IMAGE;
+
+    if (
+      user.profile_image.startsWith("http") ||
+      user.profile_image.startsWith("blob:")
+    ) {
+      return user.profile_image;
+    }
+
+    return `${BACKEND_URL}${user.profile_image}`;
   };
 
   if (loading) {
@@ -116,15 +128,18 @@ export default function MyPage() {
 
         <div className="mypage-profile-section">
           <div className="mypage-avatar-wrap">
-            {user.profile_image ? (
+            {!imgError ? (
               <img
-                src={
-                  user.profile_image.startsWith("http")
-                    ? user.profile_image
-                    : `${BACKEND_URL}${user.profile_image}`
-                }
+                src={getProfileImageSrc()}
                 alt="profile"
                 className="mypage-avatar"
+                onError={(e) => {
+                  if (e.currentTarget.src.includes(DEFAULT_PROFILE_IMAGE)) {
+                    setImgError(true);
+                    return;
+                  }
+                  e.currentTarget.src = DEFAULT_PROFILE_IMAGE;
+                }}
               />
             ) : (
               <div className="mypage-avatar fallback">

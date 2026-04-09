@@ -4,8 +4,8 @@ const pool = require('../config/db');
 exports.create = async (inviteData) => {
         const sql= `
             insert into invitations
-            (team_id,inviter_id,invitee_id)
-            values (?,?,?)
+            (team_id,inviter_id,invitee_id,status)
+            values (?,?,?,'PENDING')
         `;
         const [result] = await pool.query(sql,[
             inviteData.team_id, 
@@ -57,7 +57,7 @@ exports.getUserByEmail = async (invitee_email) => {
 // 이미 가입된 멤버인지 확인
 exports.checkIfMember = async (team_id, user_id) => {
     const [rows] = await pool.query(
-        "select * from team_members where team_id = ? and user_id = ?",
+        "select * from team_members where team_id = ? and user_id = ? and is_deleted = 0",
         [team_id, user_id]
     );
     return rows.length > 0;
@@ -99,18 +99,35 @@ exports.getInviteById = async(invite_Id) => {
     return rows[0];
 }
 
-// 멤버 등록
+// 멤버 등록 , is_deleted 상태 1일 경우와 신규 가입 구분
 exports.addteam_members = async(team_id,invitee_id) => {
-    const sql = `
+    // 1. team_members 테이블에 사용자 정보 있는지 확인
+    const checksql = `
+        select team_member_id 
+        from team_members 
+        where team_id=? and user_id=?
+    `;
+    const [rows] = await pool.query(checksql, [team_id, invitee_id]);
+
+    if (rows.length > 0) {
+        const updateSql = `
+            update team_members 
+            set is_deleted=0, joined_at=NOW()
+            where team_id=? and user_id=?
+        `;
+        return await pool.query(updateSql, [team_id, invitee_id]);
+    } else {
+        const insertsql = `
         insert into team_members(team_id,user_id)
         values (?,?)
     `;
-    const [result] = await pool.query(sql,[team_id,invitee_id]);
+     const [result] = await pool.query(insertsql,[team_id,invitee_id]);
+    }
     return result;
 }
 
 // 내가 보낸 초대 목록 조회
-exports.findSendInviteList = async(inviter_id,team_id) => {
+exports.findSendInviteList = async(team_id) => {
     try {
         const sql = `
             select
@@ -123,12 +140,11 @@ exports.findSendInviteList = async(inviter_id,team_id) => {
             from invitations i
             inner join teams t on i.team_id = t.team_id
             inner join users u on i.invitee_id=u.user_id
-            where i.inviter_id =? 
-            and i.team_id = ?
+            where i.team_id = ? 
             and i.status='PENDING'
             order by i.created_at desc
         `;
-        const [rows] = await pool.query(sql, [inviter_id,team_id]);
+        const [rows] = await pool.query(sql, [team_id]);
         return rows;
     } catch (err) {
         throw err;

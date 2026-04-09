@@ -30,8 +30,9 @@ function MemberManageModal(props = {}) {
             const res = await API.get(`/api/teams/${team_id}/members`);
             const list = res.data || [];
             setMembers(list);
+            console.log(members);
             const me = list.find(m => m.user_id === myId);
-            setMyRole(me?.role || 'VIEWER');
+            setMyRole(me?.role);
         } catch (err) {
             console.error("멤버 목록 가져오기 실패", err);
         }
@@ -142,114 +143,154 @@ function MemberManageModal(props = {}) {
     };
 
 
-
     return (
         <div style={overlayStyle}>
             <div style={modalStyle}>
+                {/* 헤더 영역 - 공통 */}
                 <div style={headerStyle}>
-                    <h2 style={{ margin: 0 }}>👥 {teamName} 멤버 관리</h2>
+                    <h2 style={{ margin: 0 }}>👥 {teamName} 멤버</h2>
                     <button onClick={() => props.onClose ? props.onClose() : navigate(-1)} style={closeBtnStyle}>&times;</button>
                 </div>
-                <div style={{ position: 'relative' }}> 
-                    <div style={searchSectionStyle}>
-                        <input 
-                        type="email" 
-                        placeholder="이메일 입력" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        style={inputStyle} 
-                        />
-                        {myRole === 'OWNER' && <button onClick={handleInvite} style={inviteBtnStyle}>초대</button>}
+
+                {/* 1. 초대 섹션 - OWNER만 보임 */}
+                {myRole === 'OWNER' && (
+                    <div style={{ position: 'relative', marginBottom: '20px' }}> 
+                        <div style={searchSectionStyle}>
+                            <input 
+                                type="email" 
+                                placeholder="이메일 입력" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)} 
+                                style={inputStyle} 
+                            />
+                            <button onClick={handleInvite} style={inviteBtnStyle}>초대</button>
                         </div>
                         
-                        {/* 자동완성 목록 창 */}
                         {showAuto && searchResults.length > 0 && (
                             <div style={autoCompleteContainer}>
                                 {searchResults.map((user) => (
                                     <div 
-                                     key={user.user_id} 
-                                     onClick={() => handleSelectUser(user.email)}
-                                     style={autoItemStyle}
-                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-                                     >
+                                        key={user.user_id} 
+                                        onClick={() => handleSelectUser(user.email)}
+                                        style={autoItemStyle}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                                    >
                                         <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#333' }}>{user.name}</div>
-                                        <div style={{ fontSize: '12px', color: '#888' }}>{user.email}</div></div>
-                                    ))}
+                                        <div style={{ fontSize: '12px', color: '#888' }}>{user.email}</div>
                                     </div>
-                                )}
-                                </div>            
+                                ))}
+                            </div>
+                        )}
+                    </div> 
+                )}
 
                 <hr style={dividerStyle} />
 
+                {/* 2. 멤버 목록 & 초대 현황 */}
                 <div style={listScrollStyle}>
                     <h3 style={sectionTitleStyle}>현재 멤버 ({members.length})</h3>
                     {members.map((member) => (
                         <div key={member.user_id} style={memberItemStyle}>
                             <div style={memberInfoStyle}>
-                                <strong>{member.name}</strong>
-                                <span style={emailTextStyle}>{member.email}</span>
-                            </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    {/* 프로필 이미지 */}
+                                    {member.profile_image && member.profile_image.startsWith('/uploads') ? (
+                                        <img
+                                        src={"http://localhost:3001" + member.profile_image}
+                                        alt={member.name}
+                                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid #eee',
+                                            display: member.profile_image ? 'block' : 'none'
+                                        }}
+                                        />
+                                    ) : (
+                                    <div style={{
+                                        width: 36, height: 36, borderRadius: '50%',
+                                        backgroundColor: '#e6f7ff', color: '#1890ff',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: 14, fontWeight: 'bold', flexShrink: 0,
+                                        border: '1px solid #91d5ff'
+                                        }}>
+                                            {member.name?.charAt(0)}
+                                            </div>
+                                        )}
+                                        {/* 이름 , 이메일 */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                {/* 목록에서 '나'임을 표시하는 뱃지 */}
+                                                {member.user_id === myId && <span style={meBadgeStyle}>나</span>} 
+                                                <strong>{member.name}</strong>
+                                            </div>
+                                            <span style={emailTextStyle}>{member.email}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            
                             <div style={actionGroupStyle}>
                                 {member.role === 'OWNER' ? (
                                     <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#52c41a', padding: '0 10px' }}>
-                    OWNER
-                    </span>
+                                        OWNER
+                                    </span>
                                 ) : myRole === 'OWNER' ? (
-                                    <select
-                                        value={member.role?.toUpperCase() || 'EDITOR'}
-                                        onChange={(e) => handleChangeRole(member.user_id, e.target.value)}
-                                        style={selectStyle}
-                                    >
-                                        <option value="EDITOR">EDITOR</option>
-                                        <option value="VIEWER">VIEWER</option>
-                                    </select>
+                                    /* 내가 OWNER라면 다른 사람의 권한을 변경하거나 삭제 가능 */
+                                    <>
+                                        <select
+                                            value={member.role?.toUpperCase() || 'EDITOR'}
+                                            onChange={(e) => handleChangeRole(member.user_id, e.target.value)}
+                                            style={selectStyle}
+                                        >
+                                            <option value="EDITOR">EDITOR</option>
+                                            <option value="VIEWER">VIEWER</option>
+                                        </select>
+                                        <button onClick={() => handleKick(member.user_id, member.name)} style={kickBtnStyle}>
+                                            삭제
+                                        </button>
+                                    </>
                                 ) : (
+                                    /* 내가 OWNER가 아니라면 그냥 역할 이름만 텍스트로 표시 */
                                     <span style={{ fontSize:'12px', color:'#9ca3af', padding:'0 6px' }}>{member.role}</span>
-                                )}
-                                {/* OWNER만 멤버 삭제 가능 */}
-                                {member.role !== 'OWNER' && myRole === 'OWNER' && (
-                                    <button onClick={() => handleKick(member.user_id, member.name)} style={kickBtnStyle}>
-                                        삭제
-                                    </button>
                                 )}
                             </div>
                         </div>
                     ))}
 
-                    <h3 style={{ ...sectionTitleStyle, marginTop: '25px' }}>보낸 초대 현황 ({sendInvites.length})</h3>
-                    {sendInvites.length > 0 ? (
-                        sendInvites.map((invite) => (
-                        <div key={invite.invite_id} style={{ ...memberItemStyle, backgroundColor: '#fcfcfc', padding: '10px' }}>
-                            <div style={memberInfoStyle}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    <strong>{invite.invitee_name}</strong>
-
-                                    {invite.status === 'PENDING' && (
-                                        <span style={pendingBadgeStyle}>대기중</span>
-                                        )}
-                                        </div>
-                                        {/* 초대 취소 버튼 : PENDING 상태에만 보임 */}
-                                        <span style={emailTextStyle}>초대일: {new Date(invite.created_at).toLocaleDateString()}</span>
-                                        </div>
-                                        <div style={actionGroupStyle}>
-                                            {invite.status === 'PENDING' && (
-                                                <button onClick={() => handleCancelInvite(invite.invite_id)} 
-                                                style={cancelBtnStyle}>
-                                                    취소
-                                                    </button>
+                    {/* 보낸 초대 현황 - 초대는 'OWNER'만 가능,초대 상황은 멤버에게 다 보임 */}
+                        <>
+                            <h3 style={{ ...sectionTitleStyle, marginTop: '25px' }}> 초대 현황 ({sendInvites.length})</h3>
+                            {sendInvites.length > 0 ? (
+                                sendInvites.map((invite) => (
+                                    <div key={invite.invite_id} style={{ ...memberItemStyle, backgroundColor: '#fcfcfc', padding: '10px' }}>
+                                        <div style={memberInfoStyle}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                <strong>{invite.invitee_name}</strong>
+                                                {invite.status === 'PENDING' && (
+                                                    <span style={pendingBadgeStyle}>대기중</span>
                                                 )}
-                                                </div>                                    
+                                            </div>
+                                            <span style={emailTextStyle}>초대일: {new Date(invite.created_at).toLocaleDateString()}</span>
                                         </div>
-                                        ))
-                                    ) : (
-                                    <p style={{ textAlign: 'center', color: '#ccc', fontSize: '13px' }}>초대 내역이 없습니다.</p>
-                                    )}
+                                        {myRole === 'OWNER'&& (
+                                            <div style={actionGroupStyle}>
+                                            {invite.status === 'PENDING' && (
+                                                <button onClick={() => handleCancelInvite(invite.invite_id)} style={cancelBtnStyle}>
+                                                    취소
+                                                </button>
+                                            )}
+                                        </div>                                    
+                                        )}                                        
+                                    </div>
+                                ))
+                            ) : (
+                                <p style={{ textAlign: 'center', color: '#ccc', fontSize: '13px' }}>초대 내역이 없습니다.</p>
+                            )}
+                        </>
+                 
                 </div>
             </div>
         </div>
     );
 }
+
 // 스타일
 const sectionTitleStyle = { fontSize: '15px', fontWeight: 'bold', margin: '15px 0 10px 0', color: '#333', textAlign: 'left' };
 const overlayStyle = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 };
@@ -270,6 +311,8 @@ const actionGroupStyle = { display: 'flex', gap: '8px' };
 const kickBtnStyle = { padding: '5px 10px', fontSize: '12px', backgroundColor: '#fff1f0', color: '#ff4d4f', border: '1px solid #ffa39e', borderRadius: '6px', cursor: 'pointer' };
 const selectStyle = { padding: '4px 8px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px', backgroundColor: '#fff', cursor: 'pointer', outline: 'none',marginRight: '5px'};
 const autoCompleteContainer = {position: 'absolute',top: '50px', left: 0,right: '85px',backgroundColor: '#fff',borderRadius: '8px',boxShadow: '0 8px 20px rgba(0,0,0,0.15)',zIndex: 100,maxHeight: '200px',overflowY: 'auto',border: '1px solid #eee'};
-
 const autoItemStyle = {padding: '10px 15px',cursor: 'pointer',textAlign: 'left',borderBottom: '1px solid #fafafa',display: 'flex',flexDirection: 'column',gap: '2px',transition: 'background-color 0.2s'};
+const meBadgeStyle = { fontSize: 10, color: '#1890ff', backgroundColor: '#e6f7ff', border: '1px solid #91d5ff', padding: '1px 6px', borderRadius: '60%', fontWeight: 600 };
+
+
 export default MemberManageModal;
