@@ -360,7 +360,7 @@ function App() {
                     dueDate: data.due_date || data.dueDate || null,
                     priority: data.priority || "MEDIUM",
                     category: data.category || "ETC",
-                    isCarriedOver: data.isCarriedOver ?? false,
+                    isCarriedOver: data.is_carried_over ?? data.isCarriedOver ?? false,
                     isRepeat: data.is_repeat ?? data.isRepeat ?? false,
                     repeatType: data.repeat_type || data.repeatType || null,
                     repeatInterval: data.repeat_interval ?? data.repeatInterval ?? 1,
@@ -370,7 +370,7 @@ function App() {
                 if (data.scope === "team" && (data.teamId || data.team_id)) {
                     await API.post(`/api/todos/team/${data.teamId || data.team_id}`, {
                         ...todoBody,
-                        assignBy: data.assignBy || null,
+                        assignBy: data.assign_by || data.assignBy || null,
                     });
                 } else {
                     await API.post('/api/todos/personal', todoBody);
@@ -407,18 +407,19 @@ function App() {
                     dueDate: data.due_date || data.dueDate || null,
                     priority: data.priority || "MEDIUM",
                     category: data.category || "ETC",
-                    isCarriedOver: data.isCarriedOver ?? false,
-                    isDone: data.isDone ?? false,
-                    isRepeat: data.isRepeat ?? false,
-                    repeatType: data.repeatType || null,
-                    repeatInterval: data.repeatInterval || 1,
-                    repeatEndAt: data.repeatEndAt || null,
-                    assignBy: data.assignBy || null,
+                    isCarriedOver: data.is_carried_over ?? data.isCarriedOver ?? false,
+                    isDone:        data.is_done        ?? data.isDone        ?? false,
+                    isRepeat:      data.is_repeat      ?? data.isRepeat      ?? false,
+                    repeatType:    data.repeat_type    || data.repeatType    || null,
+                    repeatInterval:data.repeat_interval ?? data.repeatInterval ?? 1,
+                    repeatEndAt:   data.repeat_end_at  || data.repeatEndAt   || null,
+                    assignBy:      data.assign_by      || data.assignBy      || null,
                 };
 
-                // editScope=rebuild: 반복 설정이 있으면 항상 재생성
-                // repeatGroupId 없으면(단일→반복 전환) 기존 단건만 삭제
-                if (data.editScope === "rebuild") {
+                // editScope=rebuild이더라도 isDone 변경(완료처리)은 단건 PATCH만
+                const isOnlyDoneChange = data.editScope === "rebuild" &&
+                    (data.is_done !== undefined || data.isDone !== undefined);
+                if (data.editScope === "rebuild" && !isOnlyDoneChange) {
                     // ── 재생성: 기존 삭제 후 새 설정으로 재생성 ──
                     // 1) 기존 삭제 — 반복 그룹이면 전체, 단일이면 단건
                     const deleteUrl = data.repeatGroupId
@@ -432,16 +433,17 @@ function App() {
                         dueDate: data.due_date || data.dueDate || null,
                         priority: data.priority || "MEDIUM",
                         category: data.category || "ETC",
-                        isCarriedOver: data.isCarriedOver ?? false,
-                        isRepeat: data.isRepeat ?? false,
-                        repeatType: data.repeatType || null,
-                        repeatInterval: data.repeatInterval || 1,
-                        repeatEndAt: data.repeatEndAt || null,
-                        assignBy: data.assignBy || null,
+                        isCarriedOver: data.is_carried_over ?? data.isCarriedOver ?? false,
+                        isRepeat: data.is_repeat ?? data.isRepeat ?? false,
+                        repeatType: data.repeat_type || data.repeatType || null,
+                        repeatInterval: data.repeat_interval ?? data.repeatInterval ?? 1,
+                        repeatEndAt: data.repeat_end_at || data.repeatEndAt || null,
+                        assignBy: data.assign_by || data.assignBy || null,
                     };
 
-                    if (data.scope === "team" && (data.teamId || data.team_id)) {
-                        await API.post(`/api/todos/team/${data.teamId}`, createBody);
+                    const teamIdVal = data.team_id || data.teamId || null;
+                    if (data.scope === "team" && teamIdVal) {
+                        await API.post(`/api/todos/team/${teamIdVal}`, createBody);
                     } else {
                         await API.post("/api/todos/personal", createBody);
                     }
@@ -813,11 +815,99 @@ function App() {
                         <span>통계</span>
                         <span className={`arrow ${isStatsOpen ? 'up' : 'down'}`}>▲</span>
                     </div>
-                    {isStatsOpen && (
-                        <div style={{ padding: '10px 12px', fontSize: 13, color: '#6b7280' }}>
-                            준비 중입니다.
-                        </div>
-                    )}
+                    {isStatsOpen && (() => {
+                        const yr = mainDate.getFullYear();
+                        const mo = mainDate.getMonth();
+
+                        // 이번 달 todo 필터링
+                        const monthTodos = todoEvents.filter(e => {
+                            const d = new Date(e.start);
+                            return d.getFullYear() === yr && d.getMonth() === mo;
+                        });
+
+                        // 개인 todo
+                        const personalTodos = monthTodos.filter(e => !e.extendedProps?.team_id);
+                        const personalDone  = personalTodos.filter(e => e.extendedProps?.isDone).length;
+                        const personalRate  = personalTodos.length > 0
+                            ? Math.round((personalDone / personalTodos.length) * 100) : null;
+
+                        // 팀별 todo
+                        const teamStats = teams.map(team => {
+                            const tTodos = monthTodos.filter(e => String(e.extendedProps?.team_id) === String(team.team_id));
+                            const tDone  = tTodos.filter(e => e.extendedProps?.isDone).length;
+                            const tRate  = tTodos.length > 0 ? Math.round((tDone / tTodos.length) * 100) : null;
+                            return { ...team, total: tTodos.length, done: tDone, rate: tRate };
+                        }).filter(t => t.total > 0);
+
+                        const hasAny = personalTodos.length > 0 || teamStats.length > 0;
+
+                        const rateColor = (r) => r >= 70 ? '#16a34a' : r >= 40 ? '#d97706' : '#dc2626';
+                        const barColor  = (r) => r >= 70 ? '#22c55e' : r >= 40 ? '#f59e0b' : '#ef4444';
+
+                        const Bar = ({ rate, color }) => (
+                            <div style={{ height: 6, borderRadius: 3, background: '#e5e7eb', overflow: 'hidden', marginTop: 4 }}>
+                                <div style={{ height: '100%', borderRadius: 3, width: `${rate}%`, background: color, transition: 'width 0.4s' }} />
+                            </div>
+                        );
+
+                        return (
+                            <div style={{ padding: '10px 12px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                {!hasAny && (
+                                    <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center' }}>
+                                        이번 달 할일이 없습니다.
+                                    </p>
+                                )}
+
+                                {/* 개인 할일 */}
+                                {personalTodos.length > 0 && (
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block', flexShrink: 0 }} />
+                                                개인 할일
+                                            </span>
+                                            <span style={{ fontSize: 12, fontWeight: 700, color: rateColor(personalRate) }}>
+                                                {personalRate}%
+                                            </span>
+                                        </div>
+                                        <Bar rate={personalRate} color={barColor(personalRate)} />
+                                        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>
+                                            {personalDone} / {personalTodos.length} 완료
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 팀별 할일 */}
+                                {teamStats.length > 0 && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12,
+                                        ...(personalTodos.length > 0 && { borderTop: '1px solid #f0f0f0', paddingTop: 12 }) }}>
+                                        {teamStats.map(team => {
+                                            const tc = team.team_color ?? '#4a80c4';
+                                            return (
+                                                <div key={team.team_id}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#374151',
+                                                            display: 'flex', alignItems: 'center', gap: 5,
+                                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                                                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: tc, flexShrink: 0, display: 'inline-block' }} />
+                                                            {team.team_name}
+                                                        </span>
+                                                        <span style={{ fontSize: 12, fontWeight: 700, color: rateColor(team.rate), flexShrink: 0 }}>
+                                                            {team.rate}%
+                                                        </span>
+                                                    </div>
+                                                    <Bar rate={team.rate} color={tc} />
+                                                    <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>
+                                                        {team.done} / {team.total} 완료
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
                 </div>
 
             </aside>
