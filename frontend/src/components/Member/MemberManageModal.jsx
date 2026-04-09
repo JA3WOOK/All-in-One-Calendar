@@ -30,6 +30,7 @@ function MemberManageModal(props = {}) {
             const res = await API.get(`/api/teams/${team_id}/members`);
             const list = res.data || [];
             setMembers(list);
+            console.log(members);
             const me = list.find(m => m.user_id === myId);
             setMyRole(me?.role);
         } catch (err) {
@@ -194,11 +195,13 @@ function MemberManageModal(props = {}) {
                             <div style={memberInfoStyle}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     {/* 프로필 이미지 */}
-                                    {member.profile_image ? (
+                                    {member.profile_image && member.profile_image.startsWith('/uploads') ? (
                                         <img
                                         src={"http://localhost:3001" + member.profile_image}
                                         alt={member.name}
-                                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid #eee' }}
+                                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid #eee',
+                                            display: member.profile_image ? 'block' : 'none'
+                                        }}
                                         />
                                     ) : (
                                     <div style={{
