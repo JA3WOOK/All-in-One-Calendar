@@ -4,8 +4,8 @@ const pool = require('../config/db');
 exports.create = async (inviteData) => {
         const sql= `
             insert into invitations
-            (team_id,inviter_id,invitee_id)
-            values (?,?,?)
+            (team_id,inviter_id,invitee_id,status)
+            values (?,?,?,'PENDING')
         `;
         const [result] = await pool.query(sql,[
             inviteData.team_id, 
@@ -57,7 +57,7 @@ exports.getUserByEmail = async (invitee_email) => {
 // 이미 가입된 멤버인지 확인
 exports.checkIfMember = async (team_id, user_id) => {
     const [rows] = await pool.query(
-        "select * from team_members where team_id = ? and user_id = ?",
+        "select * from team_members where team_id = ? and user_id = ? and is_deleted = 0",
         [team_id, user_id]
     );
     return rows.length > 0;
@@ -99,13 +99,30 @@ exports.getInviteById = async(invite_Id) => {
     return rows[0];
 }
 
-// 멤버 등록
+// 멤버 등록 , is_deleted 상태 1일 경우와 신규 가입 구분
 exports.addteam_members = async(team_id,invitee_id) => {
-    const sql = `
+    // 1. team_members 테이블에 사용자 정보 있는지 확인
+    const checksql = `
+        select team_member_id 
+        from team_members 
+        where team_id=? and user_id=?
+    `;
+    const [rows] = await pool.query(checksql, [team_id, invitee_id]);
+
+    if (rows.length > 0) {
+        const updateSql = `
+            update team_members 
+            set is_deleted=0, joined_at=NOW()
+            where team_id=? and user_id=?
+        `;
+        return await pool.query(updateSql, [team_id, invitee_id]);
+    } else {
+        const insertsql = `
         insert into team_members(team_id,user_id)
         values (?,?)
     `;
-    const [result] = await pool.query(sql,[team_id,invitee_id]);
+     const [result] = await pool.query(insertsql,[team_id,invitee_id]);
+    }
     return result;
 }
 
