@@ -360,11 +360,11 @@ function App() {
                     dueDate: data.due_date || data.dueDate || null,
                     priority: data.priority || "MEDIUM",
                     category: data.category || "ETC",
-                    isCarriedOver: data.isCarriedOver || false,
-                    isRepeat: data.isRepeat || false,
-                    repeatType: data.repeatType || null,
-                    repeatInterval: data.repeatInterval || 1,
-                    repeatEndAt: data.repeatEndAt || null,
+                    isCarriedOver: data.isCarriedOver ?? false,
+                    isRepeat: data.is_repeat ?? data.isRepeat ?? false,
+                    repeatType: data.repeat_type || data.repeatType || null,
+                    repeatInterval: data.repeat_interval ?? data.repeatInterval ?? 1,
+                    repeatEndAt: data.repeat_end_at || data.repeatEndAt || null,
                 };
 
                 if (data.scope === "team" && (data.teamId || data.team_id)) {
