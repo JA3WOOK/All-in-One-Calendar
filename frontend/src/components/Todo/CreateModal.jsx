@@ -35,16 +35,16 @@ const REPEAT_LABELS = { daily: "일", weekly: "주", monthly: "월" };
  *   onDelete     (data) => void | null
  */
 export default function CreateModal({
-    defaultDate = "",
-    initialData = null,
-    teams = [],
-    teamMembers = {},
-    onTeamSelect,
-    onClose,
-    onSubmit,
-    onDelete,
-    viewOnly = false,
-}) {
+                                        defaultDate = "",
+                                        initialData = null,
+                                        teams = [],
+                                        teamMembers = {},
+                                        onTeamSelect,
+                                        onClose,
+                                        onSubmit,
+                                        onDelete,
+                                        viewOnly = false,
+                                    }) {
     const isEdit = !!initialData;
 
     // ── 탭 / 스코프 ─────────────────────────────
@@ -101,7 +101,7 @@ export default function CreateModal({
             // 1. 날짜 데이터 (언더바/카멜케이스 둘 다 체크)
             const sAt = initialData.start_at || initialData.startAt;
             const eAt = initialData.end_at || initialData.endAt;
-            
+
             if (sAt) setStartAt(sAt);
             if (eAt) setEndAt(eAt);
 
@@ -109,7 +109,7 @@ export default function CreateModal({
             if (initialData.title) setTitle(initialData.title);
             if (initialData.description) setDescription(initialData.description);
             if (initialData.category) setCategory(initialData.category);
-            
+
             // 3. 할 일 전용 날짜
             const dDate = initialData.due_date || initialData.dueDate;
             if (dDate) setDueDate(dDate);
@@ -157,6 +157,13 @@ export default function CreateModal({
         if (scope === 'team' && !teamId) {
             alert('그룹을 선택해주세요.');
             return;
+        }
+        if (scope === 'team' && teamId) {
+            const selectedTeam = teams.find(t => String(t.team_id) === String(teamId));
+            if (selectedTeam?.role === 'VIEWER') {
+                alert('VIEWER 권한으로는 팀 일정/할일을 생성할 수 없습니다.');
+                return;
+            }
         }
 
         // 3. 백엔드와 맞춘 데이터 구조 생성 (언더바 형식 적용)
@@ -284,7 +291,7 @@ export default function CreateModal({
                             <TabBtn active={tab === "schedule"} onClick={() => !isEdit && setTab("schedule")} disabled={isEdit}>일정</TabBtn>
                             <TabBtn active={tab === "todo"} onClick={() => !isEdit && setTab("todo")} disabled={isEdit}>할 일</TabBtn>
                         </div>
-                        <ScopeSwitch value={scope} onChange={handleScopeChange} disabled={isEdit} noTeam={teams.length === 0} />
+                        <ScopeSwitch value={scope} onChange={handleScopeChange} disabled={isEdit} noTeam={teams.length === 0} viewerOnly={teams.length > 0 && teams.every(t => t.role === 'VIEWER')} />
                     </div>
                 </div>
 
@@ -473,7 +480,7 @@ export default function CreateModal({
 
 // ── 서브 컴포넌트 ─────────────────────────────────
 
-function ScopeSwitch({ value, onChange, disabled, noTeam }) {
+function ScopeSwitch({ value, onChange, disabled, noTeam, viewerOnly }) {
     return (
         <div style={{
             display: "flex", gap: 2, background: SURFACE, borderRadius: 8, padding: 2,
@@ -481,23 +488,26 @@ function ScopeSwitch({ value, onChange, disabled, noTeam }) {
             opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? "none" : "auto"
         }}>
             {[["personal", "개인"], ["team", "팀"]].map(([v, l]) => {
-                const teamBlocked = v === "team" && noTeam;
+                const teamBlocked = v === "team" && (noTeam || viewerOnly);
+                const blockTitle = v === "team"
+                    ? (noTeam ? "소속된 그룹이 없습니다" : viewerOnly ? "모든 그룹에서 VIEWER 권한입니다" : undefined)
+                    : undefined;
                 return (
                     <button key={v}
-                        onClick={() => !teamBlocked && onChange(v)}
-                        title={teamBlocked ? "소속된 그룹이 없습니다" : undefined}
-                        style={{
-                            background: value === v ? "#fff" : "none",
-                            border: "none",
-                            borderRadius: 6,
-                            color: teamBlocked ? "#d1d5db" : value === v ? TEXT : MUTED,
-                            fontSize: 13,
-                            padding: "4px 12px",
-                            cursor: teamBlocked ? "not-allowed" : disabled ? "default" : "pointer",
-                            fontWeight: value === v ? 500 : 400,
-                            boxShadow: value === v ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                            opacity: teamBlocked ? 0.4 : 1,
-                        }}>{l}</button>
+                            onClick={() => !teamBlocked && onChange(v)}
+                            title={blockTitle}
+                            style={{
+                                background: value === v ? "#fff" : "none",
+                                border: "none",
+                                borderRadius: 6,
+                                color: teamBlocked ? "#d1d5db" : value === v ? TEXT : MUTED,
+                                fontSize: 13,
+                                padding: "4px 12px",
+                                cursor: teamBlocked ? "not-allowed" : disabled ? "default" : "pointer",
+                                fontWeight: value === v ? 500 : 400,
+                                boxShadow: value === v ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                                opacity: teamBlocked ? 0.4 : 1,
+                            }}>{l}</button>
                 );
             })}
         </div>
@@ -507,9 +517,16 @@ function ScopeSwitch({ value, onChange, disabled, noTeam }) {
 function TeamSelect({ teams, value, onChange, disabled }) {
     return (
         <select style={{ ...s.select, width: "100%", opacity: disabled ? 0.6 : 1 }}
-            value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
+                value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
             <option value="">팀 선택</option>
-            {teams.map((t) => <option key={t.team_id} value={t.team_id}>{t.team_name}</option>)}
+            {teams.map((t) => {
+                const isViewer = t.role === 'VIEWER';
+                return (
+                    <option key={t.team_id} value={t.team_id} disabled={isViewer}>
+                        {t.team_name}{isViewer ? ' (VIEWER - 생성 불가)' : ''}
+                    </option>
+                );
+            })}
         </select>
     );
 }
@@ -633,7 +650,7 @@ function Chips({ list, labels, active, onChange, colorFn }) {
 // ── 아이콘 ───────────────────────────────────────
 const Ic = ({ d }) => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+         strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
 );
 const ClockSVG = () => <Ic d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 5v5l4 2" />;
 const RepeatSVG = () => <Ic d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4m14 2v2a4 4 0 0 1-4 4H3" />;
@@ -647,8 +664,8 @@ const AssignSVG = () => <Ic d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4
 const DoneSVG = () => <Ic d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />;
 const TrashSVG = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5 }}>
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+         style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5 }}>
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
         <path d="M10 11v6M14 11v6" />
