@@ -107,19 +107,49 @@ exports.signup = async (name, email, password, profileImage, profileEmoji) => {
     throw error;
   }
 
-  const existingUser = await userModel.getUserByEmail(email);
+  const existingUserRows = await userModel.getAnyUserByEmail(email);
+  const finalProfileImage = profileImage || profileEmoji || null;
 
-  if (existingUser && existingUser.length > 0) {
-    const error = new Error("이미 사용 중인 이메일입니다.");
-    error.status = 409;
-    throw error;
+  if (existingUserRows && existingUserRows.length > 0) {
+    const existingUser = existingUserRows[0];
+
+    // 탈퇴 안 한 계정이면 중복
+    if (!existingUser.is_deleted) {
+      const error = new Error("이미 사용 중인 이메일입니다.");
+      error.status = 409;
+      throw error;
+    }
+
+    // 탈퇴한 계정이면 복구 처리
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const restoreResult = await userModel.restoreDeletedUser(
+      name,
+      email,
+      hashedPassword,
+      finalProfileImage
+    );
+
+    if (!restoreResult || restoreResult.affectedRows === 0) {
+      const error = new Error("회원가입 처리 중 오류가 발생했습니다.");
+      error.status = 500;
+      throw error;
+    }
+
+    const restoredUserRows = await userModel.getAnyUserByEmail(email);
+    const restoredUser = restoredUserRows[0];
+
+    return {
+      message: "회원가입 성공",
+      user_id: restoredUser.user_id,
+    };
   }
 
+  // 완전 신규 가입
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const finalProfileImage = profileImage || profileEmoji;
   const result = await userModel.createUser(
-    name, 
+    name,
     email,
     hashedPassword,
     finalProfileImage

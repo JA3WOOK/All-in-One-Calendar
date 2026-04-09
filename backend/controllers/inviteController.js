@@ -130,9 +130,8 @@ exports.inviteResponse = async(req,res) => {
 
 // 내가 보낸 초대 목록 조회
 exports.sendInviteList = async(req,res) => {
-    const user_id = req.user.user_id;
     const { team_id } = req.query;
-    const results = await inviteModel.findSendInviteList(user_id, team_id);
+    const results = await inviteModel.findSendInviteList(team_id);
     res.json(results);
 }
 
