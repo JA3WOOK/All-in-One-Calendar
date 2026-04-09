@@ -22,6 +22,17 @@ const TEAM_COLOR_PALETTE = [
 
 function App() {
     const navigate = useNavigate();
+    // 로그인 유저 프로필 (localStorage에서 읽기)
+    const storedUser   = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
+    const profileName  = storedUser.name || '';
+    const getProfileImageSrc = () => {
+        const img = storedUser.profile_image;
+        if (!img) return null;
+        if (img.startsWith('http') || img.startsWith('blob:')) return img;
+        return `http://localhost:3001${img}`;
+    };
+    const profileImage = getProfileImageSrc();
+
     // 로그인 유저 ID (렌더링마다 최신값)
     const [dbEvents, setDbEvents] = useState([]);
     const [mainDate, setMainDate] = useState(new Date());
@@ -920,16 +931,30 @@ function App() {
 
                     {/* 마이페이지 아이콘 */}
                     <button
-                        title="마이페이지"
+                        title={profileName || "마이페이지"}
                         onClick={() => navigate('/mypage')}
-                        style={{ width: 44, height: 44, borderRadius: '50%', background: '#e5e7eb', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', flexShrink: 0, transition: 'background 0.15s' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#d1d5db'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                        style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0, overflow: 'hidden', padding: 0, background: '#e5e7eb', transition: 'opacity 0.15s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                     >
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                        </svg>
+                        {profileImage ? (
+                            <img
+                                src={profileImage}
+                                alt={profileName}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
+                            />
+                        ) : null}
+                        <div style={{
+                            width: '100%', height: '100%', borderRadius: '50%',
+                            background: '#e5e7eb', display: profileImage ? 'none' : 'flex',
+                            alignItems: 'center', justifyContent: 'center', color: '#374151',
+                        }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                        </div>
                     </button>
                 </header>
 
